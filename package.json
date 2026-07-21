@@ -11,8 +11,11 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.7",
+    "lucide-react": "^1.25.0",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "react-kakao-maps-sdk": "^1.2.1",
+    "react-router-dom": "^7.18.1"
   },
   "devDependencies": {
     "@types/react": "^19.2.17",
