@@ -8,7 +8,7 @@ import { agoKo } from '../lib/format';
  *   대표 사진 · 이름 · 최근 밥 · 특이사항
  *
  * ⚠️ 여기에 항목을 추가하는 건 "게스트에게 공개한다"는 뜻이다.
- *    성별이 없는 건 실수가 아니다 — 로드맵 §3-1 미확정.
+ *    성별이 없는 건 실수가 아니다 — 로드맵 §2.7-1 확정. 성별은 상세 프로필에만 나온다.
  *    게스트는 애초에 DB(cats_guest 뷰)에서 성별을 받지도 못한다.
  */
 export default function CatFloatingCard({ cat, onOpen }) {
