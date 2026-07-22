@@ -27,12 +27,3 @@ export const POLICY = {
   PHOTO_MAX_SIDE: 1600,
   PHOTO_QUALITY: 0.85,
 };
-
-// 로드맵 §2.6 — v1 스코프 밖. 켜지 말 것.
-export const OUT_OF_SCOPE_V1 = Object.freeze({
-  NEARBY_CAT_SEARCH: false, // §3-5 주변 고양이 보기 — 원칙 1 과 충돌
-  MY_CAT_BOOKMARK: false,   // §3-6 마이캣
-  KEEPER_PROFILE: false,    // §3-6 집사 프로필 · 밥 준 횟수
-  ONBOARD_QUIZ: false,      // §3-7 가입 퀴즈 · 서약서
-  COMMUNITY: false,         // 커뮤니티 / 게시판
-});

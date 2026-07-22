@@ -59,9 +59,8 @@ export async function signInWithPassword(email, password) {
 export async function signInWithKakao() {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'kakao',
-    options: { redirectTo: window.location.origin ,
-                   scopes: 'profile_nickname profile_image'},
-    
+    options: { redirectTo: window.location.origin,
+                   scopes: 'account_email' },
   });
   if (error) throw error;
 }
