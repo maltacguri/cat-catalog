@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Map, CustomOverlayMap, Circle, useKakaoLoader } from 'react-kakao-maps-sdk';
+import { Plus } from 'lucide-react';
 
 import { fetchCampus, fetchCatsForMap } from '../api/cats';
 import { useSession } from '../api/auth';
@@ -8,6 +9,7 @@ import { COPY } from '../lib/format';
 import { useAppUI } from '../components/AppUI';          // ★
 import CatFloatingCard from '../components/CatFloatingCard';
 import CatDetailPage from '../components/CatDetailPage';
+import CatRegisterForm from '../components/CatRegisterForm';
 
 export default function MapPage() {
   const [kakaoLoading, kakaoError] = useKakaoLoader({
@@ -21,6 +23,7 @@ export default function MapPage() {
   const [cats, setCats] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [detailId, setDetailId] = useState(null);
+  const [registerOpen, setRegisterOpen] = useState(false);
   const [error, setError] = useState(null);
 
   // 로그인 상태가 바뀌면 읽는 뷰가 달라지므로 다시 불러온다 (§2.2)
@@ -59,6 +62,12 @@ export default function MapPage() {
     if (!selected) return;
     if (!loggedIn) { openAuth(COPY.detailLocked); return; }   // ★
     setDetailId(selected.id);
+  }
+
+  // + 버튼 → 등록 폼(3단)도 로그인 게이트 (§2.6 · §2.8-12)
+  function openRegister() {
+    if (!loggedIn) { openAuth(COPY.writeLocked); return; }
+    setRegisterOpen(true);
   }
 
   if (kakaoError) {
@@ -123,8 +132,17 @@ export default function MapPage() {
         </div>
       </div>
 
+      <button
+        className={`fab-register ${selectedId != null ? 'is-hidden' : ''}`}
+        onClick={openRegister}
+        aria-label="냥이 등록하기"
+      >
+        <Plus size={26} strokeWidth={2.4} />
+      </button>
+
       <CatFloatingCard cat={selected} onOpen={openDetail} />
       <CatDetailPage catId={detailId} onClose={() => setDetailId(null)} />
+      <CatRegisterForm open={registerOpen} onClose={() => setRegisterOpen(false)} />
     </>
   );
 }
