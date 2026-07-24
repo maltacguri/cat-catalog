@@ -171,6 +171,25 @@ body{
 }
 .rf-submit:disabled{opacity:.4;cursor:default}
 
+/* 대표 사진 필드 — 미리보기까지만 (§2.4). 업로드는 Phase D 후속 */
+.photo-field{display:flex;flex-direction:column;gap:10px;padding:16px 0}
+.pf-picker{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:fit-content;padding:12px 18px;border-radius:10px;
+  background:var(--token-sage);color:var(--token-ink);
+  font-family:var(--token-font-body);font-size:15px;font-weight:600;cursor:pointer;
+}
+.pf-picker input{display:none}
+.pf-picker.is-busy{opacity:.55;pointer-events:none;cursor:default}
+.pf-filemeta{font-family:var(--token-font-body);font-size:13px;color:var(--token-ink);
+  opacity:.7;word-break:break-all}
+.pf-error{font-family:var(--token-font-body);font-size:13px;color:var(--token-amber);
+  white-space:pre-wrap}
+.pf-preview img{display:block;width:100%;max-width:280px;border-radius:10px}
+.pf-thumb{display:flex;flex-direction:column;gap:4px}
+.pf-thumb-label{font-family:var(--token-font-body);font-size:12px;color:var(--token-ink);opacity:.6}
+.pf-thumb img{display:block;width:120px;border-radius:10px}
+
 /* 지도 위 + 버튼 — 등록 흐름 진입점 (§2.11 등록 확인 단계) */
 .fab-register{
   position:absolute;right:16px;bottom:calc(86px + env(safe-area-inset-bottom));
