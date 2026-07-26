@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { sanitizeImage, makeThumb } from '../lib/image';
+import { uploadCoverPhoto, coverUrl } from '../api/photos';
+import { supabase } from '../lib/supabaseClient';
 
 /**
- * 대표 사진 필드 — 미리보기까지만 (§2.4, Phase D "업로드 UI" 선행 단계).
- * Storage 업로드·`cats` INSERT는 여기서 하지 않는다.
+ * 대표 사진 필드 — 선택 → 변환 → Storage 업로드까지 (§2.4, §2.11).
+ * `cats` INSERT는 아직 하지 않는다. 여기서는 cover_path 후보만 얻는다.
  */
 export default function PhotoField() {
   const [file, setFile] = useState(null);
@@ -11,6 +13,9 @@ export default function PhotoField() {
   const [error, setError] = useState(null);
   const [preview, setPreview] = useState(null);
   const [thumbPreview, setThumbPreview] = useState(null);
+  const [uploadState, setUploadState] = useState('idle'); // idle | uploading | done | error
+  const [uploadError, setUploadError] = useState(null);
+  const [coverPath, setCoverPath] = useState(null);
 
   // 미리보기 URL은 다음 파일로 교체되거나 컴포넌트가 사라질 때 해제한다
   useEffect(() => () => {
@@ -27,7 +32,11 @@ export default function PhotoField() {
     setError(null);
     setPreview(null);
     setThumbPreview(null);
+    setUploadState('idle');
+    setUploadError(null);
+    setCoverPath(null);
     setBusy(true);
+
     try {
       // 원칙 4 — EXIF 제거를 통과한 결과만 화면에 그린다 (lib/image.js)
       const [full, thumb] = await Promise.all([sanitizeImage(picked), makeThumb(picked)]);
@@ -35,8 +44,21 @@ export default function PhotoField() {
       setThumbPreview(URL.createObjectURL(thumb.blob));
     } catch (err) {
       setError(err.message || String(err));
-    } finally {
       setBusy(false);
+      return;
+    }
+    setBusy(false);
+
+    setUploadState('uploading');
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('LOGIN_REQUIRED');
+      const path = await uploadCoverPhoto(picked, { uid: user.id });
+      setCoverPath(path);
+      setUploadState('done');
+    } catch (err) {
+      setUploadError(err.message || String(err));
+      setUploadState('error');
     }
   }
 
@@ -64,6 +86,21 @@ export default function PhotoField() {
           <span className="pf-thumb-label">썸네일</span>
           <img src={thumbPreview} alt="썸네일 미리보기" />
         </div>
+      )}
+
+      {uploadState === 'uploading' && (
+        <div className="pf-upload-status">업로드 중…</div>
+      )}
+      {uploadState === 'done' && (
+        <div className="pf-upload-status pf-upload-done">
+          업로드 완료
+          {coverPath && (
+            <a href={coverUrl(coverPath)} target="_blank" rel="noreferrer"> · 확인</a>
+          )}
+        </div>
+      )}
+      {uploadState === 'error' && (
+        <div className="pf-upload-status pf-upload-error">업로드 실패: {uploadError}</div>
       )}
     </div>
   );

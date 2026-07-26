@@ -44,12 +44,13 @@ async function upload(bucket, path, blob) {
 const stamp = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 /**
- * 대표 사진 업로드 (동아리원·관리자만 호출).
+ * 대표 사진 업로드 (로그인 사용자 누구나 — §2.8-12).
+ * 등록 폼 단계에서는 아직 cats 행이 없으므로 경로는 uid 기준이다.
  * ⚠️ 이 사진은 인터넷에 공개된다. 한 번 퍼진 URL 은 회수할 수 없다.
  */
-export async function uploadCoverPhoto(file, { catId }) {
+export async function uploadCoverPhoto(file, { uid }) {
   const { blob } = await sanitizeImage(file);
-  return upload(POLICY.COVER_BUCKET, `${catId}/${stamp()}.jpg`, blob);
+  return upload(POLICY.COVER_BUCKET, `${uid}/${crypto.randomUUID()}.jpg`, blob);
 }
 
 /** 목격 사진 업로드. 원본 + 썸네일 두 장. */

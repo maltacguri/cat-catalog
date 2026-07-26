@@ -1,6 +1,6 @@
 # 캠퍼스 길고양이 도감 — 개발 로드맵 v2
 
-**최종 갱신: 2026-07-23 (14차)** · 이전 로드맵(v1)을 대체한다.
+**최종 갱신: 2026-07-25 (16차)** · 이전 로드맵(v1)을 대체한다.
 
 노션의 `로드맵_v2` 페이지와 같은 내용이다. **둘이 어긋나면 이 파일이 맞다** (Claude Code는 노션을 못 읽는다).
 
@@ -423,7 +423,7 @@ WHERE lat BETWEEN ? AND ? AND lng BETWEEN ? AND ?
 - [x] `account_email` 동의항목 설정 → 카카오 로그인 성공 확인 (§2.8-13)
 - [x] 같은 이메일 중복 계정 여부 테스트
 - [x] **RLS 정책** — §2.8 명세대로. `docs/db-and-rls.md` §4 참고. **더 막는 것 없음**
-- [x] Storage 버킷 2개 (§2.4) — `cat-covers` 공개 / `cat-photos` 비공개 확인 완료 (2026-07-21). **업로드 정책(`storage.objects` RLS)은 Phase D에서**
+- [x] Storage 버킷 2개 (§2.4) — `cat-covers` 공개 / `cat-photos` 비공개 확인 완료 (2026-07-21). **업로드 정책(`storage.objects` RLS)도 적용 완료 확인 (2026-07-25, §5-15)**
 
 ---
 
@@ -470,8 +470,8 @@ WHERE lat BETWEEN ? AND ? AND lng BETWEEN ? AND ?
 - [x] 썸네일 생성 함수 (`makeThumb`) + 원본·썸네일 동시 업로드
 - [x] 대표 사진 / 갤러리 사진 버킷 분기 (§2.4) — `getPublicUrl` / `createSignedUrl` 정상 분기 확인
 - [x] `cats`에 `color` 컬럼 추가 + CHECK 제약 (§2.11) — 2026-07-23 완료. 뷰 2개 동반 수정
-- [ ] **업로드 UI** — 위 함수들을 호출하는 화면. 이게 없어서 위 5개가 전부 죽은 경로다
-- [ ] HEIC(아이폰) → JPEG 자동 변환 — `image.js`에 `throw new Error('HEIC_NOT_SUPPORTED_YET')`, `heic2any` 미설치
+- [x] **업로드 UI** — PhotoField에서 `api/photos.js` 업로드 함수 호출 연결. localhost:5173 실동작 + Supabase Storage 실물 확인 (2026-07-25, §5-16)
+- [x] HEIC(아이폰) → JPEG 자동 변환 — heic2any 설치·적용. IMG_1114.HEIC(타입 정보 없음)로 썸네일 정상 생성 확인 (2026-07-25, §5-16)
 - [ ] 사진 1장이면 자동 대표사진 지정 — 관련 로직 없음
 - [ ] 고양이 신규 등록 폼 — **로그인 사용자 누구나** (§2.8-12). `api/cats.js`는 읽기 전용 3함수뿐, `cats` INSERT 호출부 없음. 입력 항목은 §2.11 표 그대로
 - [ ] 등록 확인 단계 (§2.11) — 도감 완성 후 연결
@@ -552,6 +552,8 @@ WHERE lat BETWEEN ? AND ? AND lng BETWEEN ? AND ?
 | 2026-07-22 (12) | **등록 흐름 사양 확정 → §2.11 확장.** ① **등록 확인 단계** — "주변에 등록된 다른 고양이들을 확인해보셨나요?" 2선택(확인해볼래요 → 도감 / 확인했어요 → 등록 폼). 강제 아니고 0건 분기도 만들지 않는다 ② **위치·색 자동 매칭과 주소검색은 v1 미구현** ③ **등록 화면은 오버레이** → §2.10에 명시 ④ **`color` 컬럼 신규 추가 확정** — 색이 없으면 `traits` 폐기(11) 이후 도감 검색 조건이 성별 하나만 남고, §2.7-8(사진 0장 일러스트)도 동작 불가. **실행 순서 재조정** — 등록 폼 → 도감 → 확인 단계 연결 → CatDetailPage. **미확정 2건 신규** — §3-18(도감 ≠ 주변 고양이 보기 여부), §3-19(색 목록 확정) |
 | 2026-07-23 (13) | **§3-19 종결 → §2.11로 이관.** 색 7종 확정(치즈·고등어·삼색이/카오스·턱시도/젖소·검정·흰색·기타), 슬러그 저장, CHECK 제약. **§2.7-8 폐기 — 대표 사진 필수 확정**(A안). 사진 0장이 폼에서 발생 불가하므로 일러스트 규칙이 도달 불가능했고, 일러스트는 색만 알려줘 식별에 실패하므로 원칙 1과도 어긋난다. **DB 실행** — `cats.color` 추가 + CHECK, `cats_full`·`cats_guest`에 `color`·`description` 추가. **위반 2건 수정** — ① `cats_guest`가 `description`을 안 내리고 있었다((11)차 미반영) ② (7)차가 "회수했다"고 적은 `cats_full` 쓰기 GRANT가 실제로는 안 회수돼 있었다(INSERT/UPDATE/DELETE/TRUNCATE/REFERENCES/TRIGGER 6개 잔존) → `revoke` 실행. 실제 쓰기는 LATERAL 조인 뷰라 원래 불가능했으나 문서·실물 불일치였다. 최종 GRANT 3행 확인 |
 | 2026-07-23 (14) | **색(`color`)을 선택 → 필수로 개정.** (13)차에서 nullable·선택으로 확정한 것을 당일 뒤집었다. **근거 — "사진에서 관찰 가능한 것은 필수, 아닌 것은 모름 허용"**이라는 기준을 세웠고, 대표사진이 필수이므로 색은 관찰 가능 쪽이다. 성별·중성화는 사진에 안 보이므로 선택 유지. **DB 실행** — 기존 더미 행을 `other`로 채운 뒤 `alter column color set not null`. **`default`는 걸지 않는다** — 기본값이 있으면 미선택이 통과돼 필수가 무력해진다. 감수 — `other` 쏠림 가능성은 실사용 후 비율로 점검한다 |
+| 2026-07-25 (15) | **Phase D의 "storage.objects 업로드 정책"은 실은 이미 적용돼 있었다.** `covers_insert_authed`·`photos_insert_authed`·`photos_read_authed` 3개가 `authenticated`로 존재, §2.4·§2.8-12와 일치. 작업 중 만든 중복 정책 3개(`cat_*_auth`)는 조건 동일해 drop, 원상 복구(3행). **안 붙인 것** — INSERT 경로 제한(임시 파일명 규칙 미정)·UPDATE/DELETE 정책(Phase F) |
+| 2026-07-25 (16) | **사진 업로드 파이프라인 실동작 완료(Phase D).** PhotoField→`api/photos.js` 연결. **경로 규칙 A 확정** — `{uid}/{uuid}.jpg`, cover→`cat-covers`·갤러리/원본→`cat-photos`. `api/photos.js` 시그니처 `catId`→`uid` 변경(죽은 코드라 수정), 랜덤은 `crypto.randomUUID()`(기존 `stamp()`는 `uploadSightingPhoto` 전용으로 유지, 재사용 아님). HEIC→JPEG 실동작 확인. localhost + Storage 실물 둘 다 확인. **안 붙음** — `cats` INSERT·나머지 필드·위치 마커·등록 버튼(등록 폼 `[ ]` 유지) |
 
 ### 되돌린 것 (같은 실수 반복 방지)
 

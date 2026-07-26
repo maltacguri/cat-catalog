@@ -171,7 +171,7 @@ body{
 }
 .rf-submit:disabled{opacity:.4;cursor:default}
 
-/* 대표 사진 필드 — 미리보기까지만 (§2.4). 업로드는 Phase D 후속 */
+/* 대표 사진 필드 — 선택·변환·업로드 (§2.4, §2.11) */
 .photo-field{display:flex;flex-direction:column;gap:10px;padding:16px 0}
 .pf-picker{
   display:inline-flex;align-items:center;justify-content:center;
@@ -189,6 +189,10 @@ body{
 .pf-thumb{display:flex;flex-direction:column;gap:4px}
 .pf-thumb-label{font-family:var(--token-font-body);font-size:12px;color:var(--token-ink);opacity:.6}
 .pf-thumb img{display:block;width:120px;border-radius:10px}
+.pf-upload-status{font-family:var(--token-font-body);font-size:13px;color:var(--token-ink);opacity:.7}
+.pf-upload-done{color:var(--token-deep-green);opacity:1;font-weight:600}
+.pf-upload-done a{color:var(--token-deep-green);text-decoration:underline}
+.pf-upload-error{color:var(--token-amber);opacity:1;white-space:pre-wrap}
 
 /* 지도 위 + 버튼 — 등록 흐름 진입점 (§2.11 등록 확인 단계) */
 .fab-register{
