@@ -5,9 +5,10 @@ import { supabase } from '../lib/supabaseClient';
 
 /**
  * 대표 사진 필드 — 선택 → 변환 → Storage 업로드까지 (§2.4, §2.11).
- * `cats` INSERT는 아직 하지 않는다. 여기서는 cover_path 후보만 얻는다.
+ * `cats` INSERT는 부모(CatRegisterForm)가 한다. 여기서는 cover_path 만 얻어
+ * onCoverReady 로 올려보낸다. 업로드 완료 전에는 null 이라 부모가 등록을 막는다.
  */
-export default function PhotoField() {
+export default function PhotoField({ onCoverReady }) {
   const [file, setFile] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -35,6 +36,7 @@ export default function PhotoField() {
     setUploadState('idle');
     setUploadError(null);
     setCoverPath(null);
+    onCoverReady?.(null);   // 재선택하면 이전 업로드 무효 → 부모 등록 다시 잠금
     setBusy(true);
 
     try {
@@ -56,9 +58,11 @@ export default function PhotoField() {
       const path = await uploadCoverPhoto(picked, { uid: user.id });
       setCoverPath(path);
       setUploadState('done');
+      onCoverReady?.(path);          // 업로드 성공 → 부모가 등록 버튼 열 수 있다
     } catch (err) {
       setUploadError(err.message || String(err));
       setUploadState('error');
+      onCoverReady?.(null);
     }
   }
 
