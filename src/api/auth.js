@@ -1,7 +1,7 @@
 // ============================================================
 // 인증 — 로드맵 §2.1
 //
-//   이메일 : OTP 인증 1회 → 비밀번호 설정 → 이후 비밀번호로 로그인
+//   이메일 : 가입 폼(이메일+비밀번호) → 확인 메일 링크 클릭 → 이후 비밀번호 로그인
 //   카카오 : 카카오 인증으로 계속 로그인
 //
 //   두 방식 모두 가입 시 앱 자체 프로필이 생기고,
@@ -14,28 +14,23 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
-// ---------- 이메일: 가입 (OTP 1회) ----------
+// ---------- 이메일: 가입 ----------
 
-/** 1단계. 6자리 코드를 메일로 보낸다. */
-export async function sendSignupCode(email) {
-  const { error } = await supabase.auth.signInWithOtp({
+export async function signUpWithEmail(email, password) {
+  const { error } = await supabase.auth.signUp({
     email,
-    options: { shouldCreateUser: true,
-      emailRedirectTo: window.location.origin, },
-    
+    password,
+    options: { emailRedirectTo: `${window.location.origin}/?welcome=1` },
   });
   if (error) throw error;
 }
 
-/** 2단계. 받은 코드를 확인한다. 성공하면 로그인 상태가 된다. */
-export async function verifySignupCode(email, token) {
-  const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
-  if (error) throw error;
-}
-
-/** 3단계. 비밀번호를 설정한다. 이후로는 OTP 없이 이걸로 로그인. */
-export async function setPassword(password) {
-  const { error } = await supabase.auth.updateUser({ password });
+export async function resendSignupEmail(email) {
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email,
+    options: { emailRedirectTo: `${window.location.origin}/?welcome=1` },
+  });
   if (error) throw error;
 }
 

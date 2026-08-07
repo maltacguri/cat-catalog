@@ -53,7 +53,7 @@
 
 | 방식 | 회원가입 | 이후 로그인 |
 | --- | --- | --- |
-| **이메일** | 이메일 OTP 인증 **1회** → 비밀번호 설정 | 이메일 + 비밀번호 |
+| **이메일** | 가입 폼(이메일 + 비밀번호 + 비밀번호 확인) → 확인 메일 링크 클릭 | 이메일 + 비밀번호 |
 | **카카오** | 카카오 인증 (`account_email` 동의항목 포함, §2.8-13) | 카카오 인증 (계속) |
 
 **두 방식 공통:**
@@ -65,9 +65,31 @@
 
 **Supabase 매핑:**
 
-- 이메일: `signInWithOtp` (가입) → `updateUser({ password })` → 이후 `signInWithPassword`
+- 이메일: `signUp({ email, password, options: { emailRedirectTo: origin + '/?welcome=1' } })`
+  → 확인 메일 링크 클릭 → 이후 `signInWithPassword`
+  - **OTP 6자리 코드 방식은 2026-08-07 폐기.** `signInWithOtp` / `verifyOtp` / `updateUser({password})` 3함수 삭제.
+    이유 — 코드는 `verifyOtp`를 기대했는데 Supabase 이메일 템플릿이 기본값(링크)이라 코드가 나간 적이 없다.
+    링크 클릭으로 세션이 먼저 생겨 `AuthPanel`의 `if (session)` 분기가 걸리고, 비밀번호 설정 단계가 통째로 건너뛰어졌다
+  - 이메일 템플릿은 기본값을 쓴다. `{{ .Token }}`으로 바꾸지 않는다
 - 카카오: `signInWithOAuth({ provider: 'kakao' })` — Supabase 공식 지원
 - 네이버는 채택하지 않는다 (공식 지원 없음, 우회 = 오버엔지니어링)
+
+**가입 대기와 완료 안내 (2026-08-07 확정)**
+
+- `signUp` 직후 session은 null이다. 원래 탭은 "메일 확인" 대기 화면에 머문다
+- 링크는 메일 앱 인앱 브라우저에서 열릴 수 있다. **같은 브라우저면** supabase-js가
+  BroadcastChannel·localStorage로 탭 간 세션을 동기화하므로 원래 탭이 자동 로그인된다.
+  **다른 브라우저면** 세션을 옮길 방법이 없다
+- 그래서 대기 화면에 **"인증 완료했어요" 버튼**을 둔다. 누르면 폼 state의 이메일·비밀번호로
+  `signInWithPassword`를 1회 시도한다. 자동 폴링은 하지 않는다(로그인 엔드포인트 rate limit)
+- 비밀번호는 메모리에만 둔다. 대기 화면을 새로고침하면 무력화되지만, 그때는 로그인 폼에서
+  직접 로그인하면 되므로 막히지 않는다
+- 링크가 열린 쪽은 `?welcome=1` 쿼리로 완료 오버레이를 띄운다. **라우트는 만들지 않는다** (§2.10 표 유지)
+
+**감수하는 것:**
+- 이미 가입된 이메일로 다시 가입해도 "이미 가입됨"을 못 띄운다 — Confirm email이 켜져 있으면
+  Supabase가 계정 존재 여부를 숨기려고 가짜 user 객체를 반환한다
+- 미확인 계정에 같은 이메일로 재가입하면 비밀번호가 갱신되지 않는다. 첫 번째 비밀번호가 남는다
 
 ---
 
@@ -271,9 +293,8 @@ WHERE lat BETWEEN ? AND ? AND lng BETWEEN ? AND ?
 **계층 — `AppUIProvider` > `BrowserRouter` > `AppLayout`(Outlet) > 페이지**
 
 - **`.phone` 프레임·하단 바·로그인 시트는 `AppLayout`이 든다.** 페이지는 `.phone`을 감지 않는다 (Fragment로 시작)
-- **`AppUI` Context** — `barHidden` / `openAuth(lead)` / `closeAuth`. 카드는 `MapPage`가, 바는 `AppLayout`이 들고 있어서 상태를 올렸다
-- **잠긴 탭은 `navigate`를 호출하지 않는다.** 로그인 시트만 열고 메인홈에 머무른다. 잠금은 UI일 뿐 실제 차단은 §2.8-11(뷰)·GRANT가 한다
-- **`CatDetailPage`는 오버레이다.** 라우트가 아니라 `MapPage` 안에서 `detailId` 상태로 띄운다. 상세가 바를 덮으므로 "상세에서 바를 보일지"라는 질문이 생기지 않는다
+- **`AppUI` Context** — `barHidden` / `openAuth(lead)` / `closeAuth` / `openDetail(catId)` / `closeDetail`. 카드는 `MapPage`가, 바는 `AppLayout`이 들고 있어서 상태를 올렸다- **잠긴 탭은 `navigate`를 호출하지 않는다.** 로그인 시트만 열고 메인홈에 머무른다. 잠금은 UI일 뿐 실제 차단은 §2.8-11(뷰)·GRANT가 한다
+- **`CatDetailPage`는 오버레이다.** 라우트가 아니라 `AppLayout`이 단일 인스턴스로 들고, `AppUI`의 `openDetail(catId)` / `closeDetail`로 연다. 지도·도감·(예정)마이캣이 같은 오버레이를 공유한다. 상세가 바를 덮으므로(`z:50` > `z:45`) "상세에서 바를 보일지"라는 질문이 생기지 않는다 *(2026-08-07 개정 — 원래는 `MapPage` 안의 `detailId` 상태였다. 진입점이 3개로 늘어날 예정이라 승격)*
 - **z-index — 하단 바 45.** 로그인 시트·`CatDetailPage`는 그보다 커야 한다
 - **`vercel.json` rewrite 필수.** 없으면 `/nearby` 새로고침 시 404
 
@@ -417,8 +438,9 @@ WHERE lat BETWEEN ? AND ? AND lng BETWEEN ? AND ?
 
 - [x] 5개 테이블 생성 (§2.5)
 - [x] 홍익대 1개 + 더미 고양이/목격/급식 넣고 앱에서 읽히는지 확인
-- [x] **이메일 OTP 가입 → 비밀번호 설정 → 비밀번호 로그인** 흐름 *(비밀번호 설정 UI 없음. 현재는 devtools. 최소 6자)*
-- [x] 가입 시 무작위 집사 이름 자동 생성 (`handle_new_user` → `random_nickname()`)
+- [ ] **이메일 가입 폼 → 확인 메일 → 비밀번호 로그인** 흐름 (§2.1, 2026-08-07 전면 개정)
+      *구 OTP 방식 UI(step code/password)는 폐기. 대시보드 선행 설정 3건 필요 —
+      Confirm email ON · Redirect URLs 와일드카드 · 템플릿 기본값 유지*- [x] 가입 시 무작위 집사 이름 자동 생성 (`handle_new_user` → `random_nickname()`)
 - [x] `profiles.onboarded_at` 컬럼 추가
 - [x] 카카오 개발자 콘솔 앱 등록
 - [x] 카카오 비즈 계정 등록 (2026-07-20)
@@ -568,6 +590,7 @@ WHERE lat BETWEEN ? AND ? AND lng BETWEEN ? AND ?
 | 2026-08-06 (21) | **CatDetailPage 마무리 완료 → Phase C 닫힘.** (a) 밥 기록에 집사 닉네임 표시 — `api/cats.js`의 feedings select에 `giver_id` + `profiles` 닉네임 조인 추가, CatDetailPage에서 렌더(§2.8-14. RLS는 (6)차부터 열려 있어 프론트만 손대면 됐다). (b) `.dp-*` 디자인 토큰 적용 — `Gowun Batang` · `#e51d53` 프로토타입 값 제거. **⚠️ 이 차수는 구현 보고 기준이다** — diff·브라우저 실물을 세션에서 확인하지 않았다. (16)~(20)차와 달리 검증 근거가 없으므로, 나중에 어긋나면 이 행을 먼저 의심한다. **부수 정정 — Phase C 체크박스 3건이 실제로는 (18)(19)차에 완료됐는데 `[ ]`로 남아 있었다**('도감 리스트+검색' · '주변 고양이 보기' · §3-18 미확정 항목). §5 이력만 쓰고 §4 체크리스트·§3 목록을 같이 안 고친 것. **"어긋남은 양방향으로 생긴다"의 세 번째 사례.** **이 파일 동기화** — 레포 파일이 (17)차에서 멈춰 있어 (18)~(21)을 이번에 한꺼번에 반영했다. 노션과 내용 일치. **다음** — Phase E, 급식 원탭부터. |
 | 2026-08-06 (22) | **급식 원탭 실동작 (Phase E).** **§2.6 개정 — 과급식 임계값을 같은 `kind` 2시간으로 확정**, `water` 제외. 원래 "너무 최근이면"이라고만 적혀 있어 §3에도 없는 미결정 상태였다 — 구현 직전에 발견해 닫았다. **변경 파일 4개** — `api/feedings.js`(신규/전면교체: `addFeeding(catId, kind)`, `fed_at`은 DB default `now()`에 맡김 — 클라이언트 시계를 믿지 않는다, `.select()` read-back 기본 + PGRST116(0행)만 방어하고 나머지 에러는 그대로 던짐, 안 쓰이던 `lastFeeding()` 삭제) · `lib/format.js`(`FEED_KO` → `KIND_KO`+`KIND_ORDER`로 통합, `COPY.recentFeedWarn`에 라벨 인자) · `CatDetailPage.jsx`(3종 선택 시트, 게스트는 `openAuth`, 과급식 판정은 이미 받아둔 `cat.feedings` 재사용해 새 쿼리 없음, 기록 후 `fetchCatDetail` 재조회) · `app.css`(`.dp-feed-*`, `--token-*`만). **검증됨** — 밥·물 실제 기록, 닉네임 함께 목록 상단 반영, "마지막으로 밥 먹은 시간"이 "방금"으로 갱신, 물은 되묻기 없이 바로 기록. **빌드** — `npm run build`·`npx oxlint` 에러 0 (2026-08-06 확인). `AppUI.jsx` 경고 1건은 이번 변경과 무관한 기존 것. **미검증** — 2시간 내 같은 종류 재클릭 시 되묻기 실동작(코드 리뷰만). **결정** — 되묻기를 네이티브 `confirm()`으로 둔다(B안). 동작은 하고, 토큰 미적용·모바일 도메인 노출은 Phase F 전체 QA에서 `RegisterConfirm` 패턴으로 교체 → Phase F에 항목 신규. **⚠️ 과정 문제** — Claude Code가 RLS 안전성을 `docs/db-and-rls.md`로 검증했다. 그 파일은 Phase B에 "(6)차 이전 스냅샷, 갱신 필요"로 명시된 낡은 문서다. 이번엔 `pg_policies` 실물을 떠서 결론이 일치했고 브라우저 INSERT도 성공했지만, **근거가 맞은 게 아니라 답이 우연히 맞은 것이다.** `db-and-rls.md` 갱신은 부채로 계속 남는다. **부수 발견 — `is_staff()`와 `feedings_moderate` 정책이 이미 실물 DB에 있다.** §3-8(role 모델)은 미확정이고 Phase F는 손도 안 댔는데 staff 개념이 선반입된 상태다 → §3-8에 기록. **다음** — 급식 카운터(집사 프로필) 또는 목격 등록(`addSighting` read-back 버그 수정 포함). |
 | 2026-08-06 (23) | **목격 등록 실동작 + `addSighting` read-back 버그 종결 (Phase E).** (17)차부터 미뤄둔 잠재버그를 닫았다. **원인 확정** — `sightings_select_authed`의 qual이 `created_at <= now() - sighting_delay()`라 INSERT 직후의 행은 일반 사용자에게 **항상** 0행이다. "실패할 수도 있는" 게 아니라 결정적이다 → `.select()` read-back을 제거하고 INSERT 성공 여부만 본다. `feedings`의 PGRST116 방어 방식을 쓰지 않은 이유는 그쪽은 지연이 없어 read-back이 정상 동작하기 때문이다. **확정 사양** — 진입점은 CatDetailPage 하단 바 "여기서 봤어요"(목격은 개체를 특정해야 성립한다), 위치는 미니지도 중심핀((17)차 등록 폼 A안 재사용), **사진은 받지 않는다**(`photo_path` NULL — 붙이면 업로드 UI가 통째로 딸려온다). **지연 안내 문구 동시 투입** — 등록해도 뷰가 1시간 지연이라 화면이 안 바뀌고, 문구가 없으면 사용자가 실패로 읽는다. Phase E 별도 항목이지만 여기서 같이 닫았다. **실물 검증 (대시보드 SQL)** — 새 행의 `lat` 37.5525(÷0.00045 = 83450, 정수) · `lng` 126.92385(= 282053, 정수)로 **50m 격자에 정확히 일치**, `photo_path` NULL, `reporter_id` 채워짐. 기존 더미 좌표(37.55205, 126.9243)와 다른 격자라 **위치 갱신 경로가 실제로 열렸다.** `npm run build`·`npx oxlint` 에러 0. **검증 함정 기록** — qual의 `OR is_staff()` 때문에 staff 계정으로 테스트하면 read-back이 성공해 **버그가 재현되지 않는다.** `select is_staff()` = false를 먼저 확인하고 검증했다. **부수 확인 — Phase B 더미 3행이 실물로 드러났다**(`reporter_id` NULL, 2026-07-19). §2.11이 경고해둔 그것이고, 실데이터 수집 전 삭제 항목이 이제 구체적으로 특정됐다. **과정 개선 (반복하지 말 것)** — (22)·(23) 두 번 연속으로 프롬프트를 먼저 쓰고 정책 SQL을 나중에 떴다. **새 테이블을 건드리는 작업은 SQL을 먼저 떠서 근거를 확보한 뒤에 프롬프트를 쓴다.** **다음** — 더미 삭제 + "굶은 게 아니다" 문구, 또는 급식 카운터. |
+| 2026-08-07 (24) | **상세 오버레이를 AppUI Context로 승격 → §2.10 개정.** 도감(NearbyPage)에서 고양이 항목을 눌러도 상세로 갈 수 없던 것을 해결. `AppUI`에 `detailId`/`openDetail`/`closeDetail` 추가, `AppLayout`이 `CatDetailPage` 단일 인스턴스 렌더, `MapPage`는 지역 상태 `detailId` 제거하고 Context 호출로 전환(지역 함수명 `openDetail` 유지, Context는 `openCatDetail`로 별칭). 라우트 변경 시 오버레이 잔존 방지 가드 1줄(`useEffect` on `pathname`). **A안(페이지마다 인스턴스) 폐기** — 마이캣이 §2.6 v1 확정이라 세 번째 인스턴스가 예정돼 있었다. 부수 — `NearbyPage`의 `<div className="nearby">j` 오타 제거(화면에 'j' 렌더되고 있었음), `.nearby-item`에 `cursor:pointer`. **기술 메모** — `.nearby`가 `z-index:10` 스태킹 컨텍스트라 상세를 그 안에 넣으면 하단 바(`z:45`)가 덮는다. AppLayout 렌더는 이 문제를 우회한다 |
 
 ### 되돌린 것 (같은 실수 반복 방지)
 
@@ -580,3 +603,14 @@ WHERE lat BETWEEN ? AND ? AND lng BETWEEN ? AND ?
 - **구버전 문서를 읽은 코드 감사 → 폐기.** 2026-07-22 감사에서 Claude Code가 (2) 시점 `roadmap-v2.md`를 읽고 §2.8-11(뷰 방식)과 §2.8-14(`profiles`)를 "위반"으로 판정했다. **둘 다 오탐이었고, 그대로 따랐으면 (4)·(6)에서 확정한 구조를 되돌릴 뻔했다.** 감사·구현을 시키기 전에 **문서 버전부터 맞춘다** — 확인은 §5 변경 이력 마지막 행 한 줄이면 된다
 - **"코드가 문서보다 뒤처져 있을 것" → 폐기.** 이번엔 반대였다. 체크리스트가 `[ ]`인 항목이 이미 구현돼 있었다. **어긋남은 양방향으로 생긴다**
 - **"사진 0장이면 색 기준 기본 일러스트" → 폐기.** 등록 폼에서 대표 사진을 필수로 확정하면서 도달할 수 없는 규칙이 됐다(2026-07-23). **확정 사항끼리도 충돌한다** — §2.11(사진 필수)과 §2.7-8(사진 0장 처리)이 같은 §2 안에서 공존했다. 새 항목을 §2에 넣을 때 기존 항목과의 충돌을 한 번 훑는다
+| 2026-08-07 (18) | **이메일 가입을 OTP 코드 → 가입 폼 + 확인 메일 링크로 전면 개정(§2.1).**
+근본 원인 — 코드는 `verifyOtp`를 기대했으나 Supabase 이메일 템플릿이 기본값(링크)이라
+6자리 코드가 나간 적이 없다. 링크 클릭 → 세션 생성 → `AuthPanel`의 `if (session)`이 먼저 걸려
+비밀번호 설정 단계가 도달 불가였다. **매직링크 유지를 택했으므로 `signUp({email, password})`로 통일** —
+비밀번호가 가입 시점에 저장되어 "링크 클릭 후 비밀번호 설정" 단계 자체가 사라진다.
+**폼 3필드로 확정** — 아이디는 Supabase가 username 로그인을 지원하지 않아 제외(§2.1 식별자=이메일 유지),
+이름(실명)은 §2.1 "무작위 닉네임"·§2.8-14 "profiles에 민감 컬럼 금지"와 충돌해 제외.
+**원래 탭 복귀는 수동 버튼(A안)** — 자동 폴링은 rate limit 때문에 배제.
+**부수 정정** — Phase B 각주 "비밀번호 설정 UI 없음, devtools 사용"은 낡은 기록이었다.
+`AuthPanel.jsx`에 3단계가 이미 구현돼 있었다((9)차와 같은 "코드가 문서보다 앞선" 케이스) |
+
