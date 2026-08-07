@@ -169,6 +169,7 @@ export default function CatDetailPage({ catId, onClose }) {
             ) : (
               <p className="notice">{COPY.noFeedRecord}</p>
             )}
+            <p className="notice">{COPY.feedRecordCaveat}</p>
 
             <div className="divider" />
 

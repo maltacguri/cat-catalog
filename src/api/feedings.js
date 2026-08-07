@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabaseClient';
 import { POLICY } from '../config/policy';
+import { KIND_ORDER } from '../lib/format';
 
 /** 과급식 되묻기 — 같은 kind 최근 기록이 이 시간 안이면 true (§2.6) */
 export function isTooSoon(lastFedAt) {
@@ -28,4 +29,24 @@ export async function addFeeding(catId, kind) {
     throw error;
   }
   return data;
+}
+
+/** 집사 프로필 급식 카운터 3종 (§2.8-15). 로그인 안 돼 있으면 null. */
+export async function fetchMyFeedCounts() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const results = await Promise.all(
+    KIND_ORDER.map((k) => supabase.from('feedings')
+      .select('*', { count: 'exact', head: true })
+      .eq('giver_id', user.id).eq('kind', k))
+  );
+
+  const counts = {};
+  KIND_ORDER.forEach((k, i) => {
+    const { count, error } = results[i];
+    if (error) throw error;
+    counts[k] = count;
+  });
+  return counts;
 }

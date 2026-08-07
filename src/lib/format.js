@@ -47,8 +47,9 @@ export const NEUTERED_KO = { yes: '했어요', no: '안 했어요', unknown: '�
 export const NEUTERED_TO_DB = { yes: true, no: false, unknown: null };
 
 export const COPY = {
-  noFeedRecord:
-    '아직 기록이 없어요. 기록이 없다고 굶은 건 아니에요 — 도감에 남기지 않고 챙기는 분들도 많아요.',
+  noFeedRecord: '아직 기록이 없어요.',
+  feedRecordCaveat:
+    '여기 기록이 전부는 아니에요. 기록을 남기지 않고 챙기는 분들도 많아서, 비어 있거나 오래됐다고 굶었다고 볼 수는 없어요.',
   blurNotice: '고양이 보호를 위해 위치는 넓게, 시간은 늦춰서 보여줍니다.',
   sightingSaved: `등록됐어요. 다른 사람 화면에는 약 ${POLICY.SIGHTING_DELAY_HOURS}시간 뒤부터 보입니다.`,
   sightingRecorded: `기록됐어요. 다른 사람에게는 약 ${POLICY.SIGHTING_DELAY_HOURS}시간 뒤부터 보여요.`,
