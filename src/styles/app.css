@@ -68,7 +68,7 @@ body{
 .detail-page{
   position:absolute;inset:0;z-index:50;background:var(--paper);
   transform:translateY(100%);opacity:0;pointer-events:none;
-  overflow-y:auto;overflow-x:hidden;padding-bottom:100px;
+  overflow-y:auto;overflow-x:hidden;
   transition:transform .35s cubic-bezier(.2,.8,.3,1),opacity .2s;
 }
 .detail-page.show{transform:translateY(0);opacity:1;pointer-events:auto}
@@ -105,7 +105,7 @@ body{
 .notice{font-size:13px;line-height:1.5;color:var(--muted);
   background:#f7f6f2;border-radius:10px;padding:12px 14px;margin-top:8px}
 
-.bottom-bar{position:absolute;bottom:0;left:0;right:0;z-index:60;background:var(--paper);
+.bottom-bar{position:sticky;bottom:0;left:0;right:0;z-index:60;background:var(--paper);
   border-top:1px solid var(--line);
   padding:14px 20px calc(14px + env(safe-area-inset-bottom));
   display:flex;justify-content:space-between;align-items:center;gap:12px}
@@ -114,6 +114,43 @@ body{
 .bb-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;
   padding:14px 24px;font-size:16px;font-weight:700;cursor:pointer;white-space:nowrap}
 .bb-btn:disabled{background:#222;cursor:default}
+
+/* 밥 주기 3종 선택 (§2.6, Phase E) */
+.dp-feed-backdrop{position:absolute;inset:0;z-index:65;background:rgba(0,0,0,.35);
+  display:flex;align-items:flex-end;justify-content:center;padding:16px}
+.dp-feed-sheet{background:var(--token-paper);border-radius:16px;padding:14px;
+  width:100%;max-width:360px;display:flex;gap:10px;
+  box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.dp-feed-opt{flex:1;padding:14px 0;border-radius:10px;border:1px solid rgba(42,42,36,.18);
+  background:var(--token-sage);color:var(--token-ink);font-family:var(--token-font-body);
+  font-size:15px;font-weight:600;cursor:pointer}
+.dp-feed-opt:active{background:var(--token-deep-green);color:#fff}
+
+/* 목격 등록 — "여기서 봤어요" (§2.3, Phase E) */
+.bb-actions{display:flex;gap:8px}
+.bb-btn-line{background:transparent;color:var(--token-deep-green);
+  border:1.5px solid var(--token-deep-green);border-radius:8px;
+  padding:14px 16px;font-size:15px;font-weight:700;cursor:pointer;
+  font-family:var(--token-font-body);white-space:nowrap}
+.bb-btn-line:disabled{opacity:.5;cursor:default}
+
+.dp-sight-backdrop{position:absolute;inset:0;z-index:68;background:rgba(0,0,0,.35);
+  display:flex;align-items:center;justify-content:center;padding:20px}
+.dp-sight-sheet{background:var(--token-paper);border-radius:18px;padding:20px;
+  width:100%;max-width:340px;display:flex;flex-direction:column;gap:12px;
+  box-shadow:0 12px 40px rgba(0,0,0,.25);font-family:var(--token-font-body)}
+.dp-sight-head{font-family:var(--token-font-title);font-size:19px;font-weight:700;
+  color:var(--token-ink);text-align:center}
+.dp-sight-actions{display:flex;gap:8px;margin-top:4px}
+.dp-sight-cancel{flex:1;padding:13px;border-radius:12px;font-size:15px;font-weight:700;
+  cursor:pointer;font-family:inherit;background:var(--token-paper);color:var(--token-ink);
+  border:1px solid rgba(42,42,36,.18)}
+.dp-sight-submit{flex:1;padding:13px;border-radius:12px;font-size:15px;font-weight:700;
+  cursor:pointer;font-family:inherit;background:var(--token-deep-green);color:#fff;border:none}
+.dp-sight-submit:disabled{opacity:.5;cursor:default}
+.dp-sight-done{display:flex;flex-direction:column;align-items:center;gap:14px;
+  text-align:center;padding:8px 0}
+.dp-sight-done-msg{font-size:15px;color:var(--token-ink);line-height:1.5}
 
 /* 로그인 */
 .sheet-backdrop{position:absolute;inset:0;z-index:70;background:rgba(0,0,0,.35);
@@ -145,6 +182,66 @@ body{
 
 .searchpill > div { flex: 1; text-align: center; }
 
+/* 3단 — 고양이 등록 폼 (§2.10, §2.11) — CatDetailPage와 같은 오버레이 패턴 */
+.register-page{
+  position:absolute;inset:0;z-index:50;background:var(--token-paper);
+  transform:translateY(100%);opacity:0;pointer-events:none;
+  overflow-y:auto;overflow-x:hidden;
+  transition:transform .35s cubic-bezier(.2,.8,.3,1),opacity .2s;
+}
+.register-page.show{transform:translateY(0);opacity:1;pointer-events:auto}
+.rf-header{
+  display:flex;align-items:center;gap:12px;
+  padding:calc(20px + env(safe-area-inset-top)) 20px 16px;
+}
+.rf-back{
+  width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.05);border:none;
+  font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  color:var(--token-ink);flex-shrink:0;
+}
+.rf-title{font-family:var(--token-font-title);font-size:20px;font-weight:700;color:var(--token-ink)}
+.rf-body{flex:1;padding:0 20px 24px;color:var(--token-ink);font-family:var(--token-font-body)}
+.rf-footer{padding:16px 20px calc(16px + env(safe-area-inset-bottom))}
+.rf-submit{
+  width:100%;padding:14px;border-radius:10px;border:none;
+  background:var(--token-deep-green);color:#fff;font-size:16px;font-weight:700;cursor:pointer;
+}
+.rf-submit:disabled{opacity:.4;cursor:default}
+
+/* 대표 사진 필드 — 선택·변환·업로드 (§2.4, §2.11) */
+.photo-field{display:flex;flex-direction:column;gap:10px;padding:16px 0}
+.pf-picker{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:fit-content;padding:12px 18px;border-radius:10px;
+  background:var(--token-sage);color:var(--token-ink);
+  font-family:var(--token-font-body);font-size:15px;font-weight:600;cursor:pointer;
+}
+.pf-picker input{display:none}
+.pf-picker.is-busy{opacity:.55;pointer-events:none;cursor:default}
+.pf-filemeta{font-family:var(--token-font-body);font-size:13px;color:var(--token-ink);
+  opacity:.7;word-break:break-all}
+.pf-error{font-family:var(--token-font-body);font-size:13px;color:var(--token-amber);
+  white-space:pre-wrap}
+.pf-preview img{display:block;width:100%;max-width:280px;border-radius:10px}
+.pf-thumb{display:flex;flex-direction:column;gap:4px}
+.pf-thumb-label{font-family:var(--token-font-body);font-size:12px;color:var(--token-ink);opacity:.6}
+.pf-thumb img{display:block;width:120px;border-radius:10px}
+.pf-upload-status{font-family:var(--token-font-body);font-size:13px;color:var(--token-ink);opacity:.7}
+.pf-upload-done{color:var(--token-deep-green);opacity:1;font-weight:600}
+.pf-upload-done a{color:var(--token-deep-green);text-decoration:underline}
+.pf-upload-error{color:var(--token-amber);opacity:1;white-space:pre-wrap}
+
+/* 지도 위 + 버튼 — 등록 흐름 진입점 (§2.11 등록 확인 단계) */
+.fab-register{
+  position:absolute;right:16px;bottom:calc(86px + env(safe-area-inset-bottom));
+  z-index:46;width:52px;height:52px;border-radius:50%;
+  background:var(--token-deep-green);color:#fff;border:none;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 16px rgba(0,0,0,.25);cursor:pointer;
+  transition:transform .32s cubic-bezier(.2,.8,.3,1),opacity .2s;
+}
+.fab-register.is-hidden{transform:translateY(110%) scale(.8);opacity:0;pointer-events:none}
+
 /* ── 하단 바 (앱플로우 §6) ───────────────────────── */
 .bottombar{
   position:absolute; left:0; right:0; bottom:0; z-index:45;
@@ -169,3 +266,111 @@ body{
 .bb-icon{ position:relative; display:flex; }
 .bb-lock{ position:absolute; right:-6px; bottom:-2px; color:#C0842A; }
 .bb-label{ font-size:11px; line-height:1; }
+
+/* ---- 고양이 등록 폼 필드 (§2.11) — 중앙정렬 · 번호 · 색 아코디언 ---- */
+.rf-body{text-align:center}
+.rf-photo{display:flex;justify-content:center}
+.photo-field{align-items:center}
+
+.rf-field{display:flex;flex-direction:column;align-items:center;gap:8px;
+  width:100%;margin-top:26px}
+
+/* 질문 라벨 — 크게 · 볼드 · 제목 폰트(Gaegu) */
+.rf-label{font-family:var(--token-font-title);font-size:21px;font-weight:700;
+  color:var(--token-ink);line-height:1.2}
+.rf-label .req{color:var(--token-amber);font-style:normal;margin-left:2px}
+.rf-sublabel{font-family:var(--token-font-body);font-size:13px;color:var(--token-ink);opacity:.6}
+
+.rf-input{font-family:var(--token-font-body);font-size:15px;color:var(--token-ink);
+  background:#fff;border:1px solid rgba(42,42,36,.18);border-radius:10px;
+  padding:11px 12px;width:min(300px,100%);text-align:left}
+.rf-input:focus{outline:none;border-color:var(--token-deep-green)}
+.rf-textarea{resize:vertical;line-height:1.5}
+.rf-hint{font-family:var(--token-font-body);font-size:12px;color:var(--token-ink);opacity:.55;
+  max-width:300px}
+
+/* 성별 · 중성화 칩 */
+.rf-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.rf-chip{font-family:var(--token-font-body);font-size:14px;color:var(--token-ink);
+  background:var(--token-paper);border:1px solid rgba(42,42,36,.18);border-radius:999px;
+  padding:8px 16px;cursor:pointer;transition:background .12s,border-color .12s}
+.rf-chip.on{background:var(--token-deep-green);border-color:var(--token-deep-green);
+  color:#fff;font-weight:600}
+
+/* 색 아코디언 */
+.rf-acc{width:min(300px,100%);display:flex;flex-direction:column;gap:0}
+.rf-acc-head{display:flex;align-items:center;justify-content:space-between;
+  font-family:var(--token-font-body);font-size:15px;color:var(--token-ink);opacity:.55;
+  background:#fff;border:1px solid rgba(42,42,36,.18);border-radius:10px;
+  padding:11px 14px;cursor:pointer;width:100%}
+.rf-acc-head.picked{opacity:1;font-weight:600}
+.rf-acc-chev{transition:transform .18s;flex-shrink:0}
+.rf-acc-chev.open{transform:rotate(180deg)}
+.rf-acc-body{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;
+  padding:10px;margin-top:8px;
+  background:var(--token-paper);border:1px solid rgba(42,42,36,.14);border-radius:10px}
+.rf-acc-item{font-family:var(--token-font-body);font-size:14px;color:var(--token-ink);
+  background:#fff;border:1px solid rgba(42,42,36,.18);border-radius:999px;
+  padding:8px 16px;cursor:pointer}
+.rf-acc-item.on{background:var(--token-deep-green);border-color:var(--token-deep-green);
+  color:#fff;font-weight:600}
+
+/* 위치 미니 지도 + 고정 핀 */
+.rf-map{position:relative;width:min(320px,100%);height:200px;border-radius:12px;overflow:hidden;
+  border:1px solid rgba(42,42,36,.18)}
+.rf-pin{position:absolute;left:50%;top:50%;transform:translate(-50%,-100%);
+  font-size:28px;line-height:1;pointer-events:none;z-index:3;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
+
+/* 등록 완료 화면 */
+.rf-done{display:flex;flex-direction:column;align-items:center;gap:10px;padding:48px 6px;text-align:center}
+.rf-done-title{font-family:var(--token-font-title);font-size:28px;font-weight:700;color:var(--token-deep-green)}
+.rf-done-msg{font-family:var(--token-font-body);font-size:15px;color:var(--token-ink);max-width:300px}
+.rf-done-sub{font-family:var(--token-font-body);font-size:13px;color:var(--token-ink);opacity:.6;max-width:300px}
+.rf-done .rf-submit{margin-top:14px;max-width:300px}
+
+
+/* ── 주변 고양이 도감 (NearbyPage, §2.7-5 · §3-18) ─────────────── */
+.nearby{
+  position:absolute; inset:0; z-index:10; overflow-y:auto; overflow-x:hidden;
+  background:var(--token-paper); color:var(--token-ink);
+  font-family:var(--token-font-body); padding:16px 16px 90px; /* 하단 = 네비 바 자리 */
+}
+.nearby-head{display:flex;align-items:center;justify-content:space-between;margin:6px 0 14px}
+.nearby-title{font-family:var(--token-font-title);font-size:24px;font-weight:700}
+.nearby-register{display:inline-flex;align-items:center;gap:4px;background:var(--accent);
+  color:#fff;border:none;border-radius:20px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer}
+.nearby-search{display:flex;align-items:center;gap:8px;background:var(--paper);
+  border:1px solid var(--line);border-radius:24px;padding:10px 14px;margin-bottom:12px;color:var(--muted)}
+.nearby-search input{flex:1;border:none;outline:none;background:transparent;
+  font-size:14px;color:var(--ink);font-family:inherit}
+.nearby-filter{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.nearby-chip{border:1px solid var(--line);background:var(--paper);color:var(--muted);
+  border-radius:16px;padding:6px 12px;font-size:13px;cursor:pointer;font-family:inherit}
+.nearby-chip.on{background:var(--token-ink);color:#fff;border-color:var(--token-ink)}
+.nearby-empty{text-align:center;color:var(--muted);font-size:14px;padding:40px 0}
+.nearby-list{list-style:none;display:flex;flex-direction:column;gap:12px}
+.nearby-item{display:flex;gap:12px;background:var(--paper);border:1px solid var(--line);
+  border-radius:14px;overflow:hidden;padding:10px}
+.nearby-thumb{width:72px;height:72px;flex:0 0 72px;border-radius:10px;overflow:hidden;background:#e8e5dd}
+.nearby-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.nearby-meta{min-width:0;display:flex;flex-direction:column;justify-content:center}
+.nearby-name{font-family:var(--token-font-title);font-size:18px;font-weight:700;line-height:1.2}
+.nearby-tags{font-size:12px;color:var(--muted);margin-top:2px}
+.nearby-desc{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.4;
+  display:-webkit-box;webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.nearby-gate{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;text-align:center;padding:0 24px}
+
+
+  /* ── 등록 확인 단계 (RegisterConfirm, §2.11) ─────────────── */
+.rc-backdrop{position:absolute;inset:0;z-index:70;background:rgba(0,0,0,.35);
+  display:flex;align-items:center;justify-content:center;padding:24px}
+.rc-sheet{background:var(--token-paper);border-radius:18px;padding:24px 20px;width:100%;
+  max-width:320px;text-align:center;font-family:var(--token-font-body);box-shadow:0 12px 40px rgba(0,0,0,.25)}
+.rc-q{font-family:var(--token-font-title);font-size:19px;font-weight:700;
+  color:var(--token-ink);line-height:1.4;margin-bottom:16px}
+.rc-btn{width:100%;padding:13px;border-radius:12px;font-size:15px;font-weight:700;
+  cursor:pointer;font-family:inherit;margin-top:8px}
+.rc-line{background:var(--paper);color:var(--ink);border:1px solid var(--line)}
+.rc-fill{background:var(--token-ink);color:#fff;border:none}

@@ -20,15 +20,18 @@ export async function sanitizeImage(file, opts = {}) {
   const maxSide = opts.maxSide ?? POLICY.PHOTO_MAX_SIDE;
   const quality = opts.quality ?? POLICY.PHOTO_QUALITY;
 
-  // HEIC: 대부분의 브라우저가 디코딩하지 못한다.
-  // Phase D 에서 heic2any 를 붙일 것:  npm i heic2any
-  //   const heic2any = (await import('heic2any')).default;
-  //   source = await heic2any({ blob: file, toType: 'image/jpeg', quality });
-  if (isHeic(file)) throw new Error('HEIC_NOT_SUPPORTED_YET');
+  // HEIC: 대부분의 브라우저가 createImageBitmap 으로 디코딩하지 못한다.
+  // heic2any 는 무거우므로 HEIC 일 때만 동적 import 한다 — JPEG/PNG 는 아예 안 불러온다.
+  let source = file;
+  if (isHeic(file)) {
+    const { default: heic2any } = await import('heic2any');
+    const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality });
+    source = Array.isArray(converted) ? converted[0] : converted;
+  }
 
   // imageOrientation: 'from-image' → 회전 EXIF 를 픽셀에 반영한 뒤 버린다.
   // (빼면 아이폰 세로 사진이 눕는다)
-  const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+  const bitmap = await createImageBitmap(source, { imageOrientation: 'from-image' });
 
   const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
   const w = Math.round(bitmap.width * scale);

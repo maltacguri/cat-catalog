@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';        // ★ 추가
 import { Map, CustomOverlayMap, Circle, useKakaoLoader } from 'react-kakao-maps-sdk';
+import { Plus } from 'lucide-react';
 
 import { fetchCampus, fetchCatsForMap } from '../api/cats';
 import { useSession } from '../api/auth';
@@ -8,6 +10,8 @@ import { COPY } from '../lib/format';
 import { useAppUI } from '../components/AppUI';          // ★
 import CatFloatingCard from '../components/CatFloatingCard';
 import CatDetailPage from '../components/CatDetailPage';
+import CatRegisterForm from '../components/CatRegisterForm';
+import RegisterConfirm from '../components/RegisterConfirm';        // ★ 추가
 
 export default function MapPage() {
   const [kakaoLoading, kakaoError] = useKakaoLoader({
@@ -16,12 +20,19 @@ export default function MapPage() {
 
   const { loggedIn } = useSession();
   const { setBarHidden, openAuth } = useAppUI();          // ★ 시트는 AppLayout이 그린다
+  const location = useLocation();                          // ★ 도감에서 온 openRegister 플래그 읽기
+  const navigate = useNavigate();                          // ★
 
   const [campus, setCampus] = useState(null);
   const [cats, setCats] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [detailId, setDetailId] = useState(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);       // ★ 등록 확인 단계(§2.11)
+  const [registerOpen, setRegisterOpen] = useState(false);
+  const [registerCenter, setRegisterCenter] = useState(null);  // 등록 폼 미니 지도 초기 중심
   const [error, setError] = useState(null);
+
+  const mapRef = useRef(null);   // 지도 인스턴스 — 등록 시 현재 중심을 읽는다
 
   // 로그인 상태가 바뀌면 읽는 뷰가 달라지므로 다시 불러온다 (§2.2)
   useEffect(() => {
@@ -37,6 +48,16 @@ export default function MapPage() {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loggedIn]);
+
+  // ★ 도감 "새로 등록하기"에서 넘어온 경우 — 확인 다이얼로그 스킵하고 등록 폼 직행 (§2.11)
+  //   campus 가 준비돼야 폼 미니 지도 폴백 중심이 잡히므로 campus 를 기다린다.
+  useEffect(() => {
+    if (loggedIn && campus && location.state?.openRegister) {
+      openRegister();
+      navigate('/', { replace: true, state: null });   // 뒤로가기·새로고침에 재발동 안 하게 플래그 비움
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loggedIn, campus, location.state]);
 
   // ★ 카드가 올라오면 하단 바를 내린다 (앱플로우 §6)
   useEffect(() => { setBarHidden(selectedId != null); }, [selectedId, setBarHidden]);
@@ -61,6 +82,31 @@ export default function MapPage() {
     setDetailId(selected.id);
   }
 
+  // ★ + 버튼 → 등록 폼 전에 확인 단계 먼저 (§2.11). 로그인 게이트는 여기서 (§2.6·§2.8-12)
+  function onPlus() {
+    if (!loggedIn) { openAuth(COPY.writeLocked); return; }
+    setConfirmOpen(true);
+  }
+
+  // 확인 다이얼로그 "네, 확인했어요" → 폼 열기. 도감에서 직행한 경우에도 이 함수를 바로 부른다.
+  function openRegister() {
+    if (!loggedIn) { openAuth(COPY.writeLocked); return; }
+    // 지금 보고 있던 지도 중심을 등록 폼 미니 지도의 시작점으로 넘긴다 (없으면 캠퍼스 중심)
+    const c = mapRef.current?.getCenter();
+    setRegisterCenter(
+      c ? { lat: c.getLat(), lng: c.getLng() }
+        : (campus ? { lat: campus.center_lat, lng: campus.center_lng } : null)
+    );
+    setConfirmOpen(false);       // ★ 확인 → 폼 전환
+    setRegisterOpen(true);
+  }
+
+  // 등록 성공 → 뷰를 다시 읽는다. 방금 만든 개체는 1시간 지연이라 핀은 아직 안 뜨지만,
+  // cats 행은 잡히므로 "도감 N마리" 카운터는 바로 오른다 (§2.3)
+  async function handleCreated() {
+    try { setCats(await fetchCatsForMap(loggedIn)); } catch (e) { console.error(e); }
+  }
+
   if (kakaoError) {
     return (
       <div className="center-note">
@@ -80,6 +126,7 @@ export default function MapPage() {
             center={{ lat: campus.center_lat, lng: campus.center_lng }}
             level={3}
             style={{ width: '100%', height: '100%' }}
+            onCreate={(m) => { mapRef.current = m; }}
             onClick={() => setSelectedId(null)}
           >
             {/* 원은 장식이 아니라 안내다: "이 안 어딘가"라는 뜻 */}
@@ -123,8 +170,31 @@ export default function MapPage() {
         </div>
       </div>
 
+      <button
+        className={`fab-register ${selectedId != null ? 'is-hidden' : ''}`}
+        onClick={onPlus}
+        aria-label="냥이 등록하기"
+      >
+        <Plus size={26} strokeWidth={2.4} />
+      </button>
+
       <CatFloatingCard cat={selected} onOpen={openDetail} />
       <CatDetailPage catId={detailId} onClose={() => setDetailId(null)} />
+
+      {/* ★ 등록 확인 단계 (§2.11) — + 를 누르면 폼 전에 이 한 단계 */}
+      <RegisterConfirm
+        open={confirmOpen}
+        onGoCatalog={() => { setConfirmOpen(false); navigate('/nearby'); }}
+        onGoForm={openRegister}
+        onClose={() => setConfirmOpen(false)}
+      />
+
+      <CatRegisterForm
+        open={registerOpen}
+        onClose={() => setRegisterOpen(false)}
+        initialCenter={registerCenter}
+        onCreated={handleCreated}
+      />
     </>
   );
 }

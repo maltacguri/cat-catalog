@@ -1,0 +1,18 @@
+[33mcommit 96fafa0bb8a4b8d6175e03f1b57d62fca9112182[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/cat-register-form-shell[m[33m)[m
+Author: maltacguri <jws01093439130@gmail.com>
+Date:   Sun Jul 26 17:33:48 2026 +0900
+
+    feat: connect PhotoField to Storage upload, update roadmap to (16)
+    
+    - uploadCoverPhoto now paths by uid/uuid.jpg (no cats row yet at registration
+      time), uploaded to cat-covers via PhotoField after preview generation
+    - roadmap-v2.md: header to (16차), Phase D upload UI + HEIC checkboxes done,
+      §5 (15)/(16) entries for storage.objects policy verification and this work
+    
+    Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+
+ docs/roadmap-v2.md            | 10 [32m++++++[m[31m----[m
+ src/api/photos.js             |  7 [32m++++[m[31m---[m
+ src/components/PhotoField.jsx | 43 [32m++++++++++++++++++++++++++++++++++++++++[m[31m---[m
+ src/styles/app.css            |  6 [32m+++++[m[31m-[m
+ 4 files changed, 55 insertions(+), 11 deletions(-)
