@@ -17,7 +17,7 @@ const SEX_FILTERS = ['male', 'female', 'unknown']; // 등록 폼과 같은 값
 export default function NearbyPage() {
   const navigate = useNavigate();
   const { loggedIn } = useSession();
-  const { openAuth } = useAppUI();
+  const { openAuth, openDetail } = useAppUI();
 
   const [cats, setCats] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -68,7 +68,7 @@ export default function NearbyPage() {
   }
 
   return (
-    <div className="nearby">j
+    <div className="nearby">
       <header className="nearby-head">
         <h1 className="nearby-title">주변 고양이 도감</h1>
         {/* 임시 — 지도로 보내 +로 등록하게 한다. 실제 폼 오픈/확인 다이얼로그는 '등록 확인 단계 연결'에서 */}
@@ -115,9 +115,8 @@ export default function NearbyPage() {
         </p>
       ) : (
         <ul className="nearby-list">
-          {/* 상세 드릴인은 아직 안 붙임 — CatDetailPage가 MapPage 오버레이라, 상세 마무리 때 연결 */}
           {shown.map((c) => (
-            <li key={c.id} className="nearby-item">
+            <li key={c.id} className="nearby-item" onClick={() => openDetail(c.id)}>
               <div className="nearby-thumb">
                 <CatPhoto path={c.cover_path} kind="cover" alt={c.name} />
               </div>

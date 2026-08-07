@@ -9,7 +9,6 @@ import { GRID_RADIUS_M } from '../lib/geo';
 import { COPY } from '../lib/format';
 import { useAppUI } from '../components/AppUI';          // ★
 import CatFloatingCard from '../components/CatFloatingCard';
-import CatDetailPage from '../components/CatDetailPage';
 import CatRegisterForm from '../components/CatRegisterForm';
 import RegisterConfirm from '../components/RegisterConfirm';        // ★ 추가
 
@@ -19,14 +18,13 @@ export default function MapPage() {
   });
 
   const { loggedIn } = useSession();
-  const { setBarHidden, openAuth } = useAppUI();          // ★ 시트는 AppLayout이 그린다
+  const { setBarHidden, openAuth, openDetail: openCatDetail } = useAppUI();          // ★ 시트·상세는 AppLayout이 그린다
   const location = useLocation();                          // ★ 도감에서 온 openRegister 플래그 읽기
   const navigate = useNavigate();                          // ★
 
   const [campus, setCampus] = useState(null);
   const [cats, setCats] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
-  const [detailId, setDetailId] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);       // ★ 등록 확인 단계(§2.11)
   const [registerOpen, setRegisterOpen] = useState(false);
   const [registerCenter, setRegisterCenter] = useState(null);  // 등록 폼 미니 지도 초기 중심
@@ -79,7 +77,7 @@ export default function MapPage() {
   function openDetail() {
     if (!selected) return;
     if (!loggedIn) { openAuth(COPY.detailLocked); return; }   // ★
-    setDetailId(selected.id);
+    openCatDetail(selected.id);
   }
 
   // ★ + 버튼 → 등록 폼 전에 확인 단계 먼저 (§2.11). 로그인 게이트는 여기서 (§2.6·§2.8-12)
@@ -179,7 +177,6 @@ export default function MapPage() {
       </button>
 
       <CatFloatingCard cat={selected} onOpen={openDetail} />
-      <CatDetailPage catId={detailId} onClose={() => setDetailId(null)} />
 
       {/* ★ 등록 확인 단계 (§2.11) — + 를 누르면 폼 전에 이 한 단계 */}
       <RegisterConfirm

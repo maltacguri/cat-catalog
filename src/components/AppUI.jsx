@@ -8,6 +8,7 @@ export function AppUIProvider({ children }) {
   const [barHidden, setBarHidden] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [authLead, setAuthLead] = useState(null);
+  const [detailId, setDetailId] = useState(null);
 
   const value = useMemo(() => ({
     barHidden,
@@ -16,7 +17,10 @@ export function AppUIProvider({ children }) {
     authLead,
     openAuth: (lead) => { setAuthLead(lead ?? null); setAuthOpen(true); },
     closeAuth: () => setAuthOpen(false),
-  }), [barHidden, authOpen, authLead]);
+    detailId,
+    openDetail: (catId) => setDetailId(catId),
+    closeDetail: () => setDetailId(null),
+  }), [barHidden, authOpen, authLead, detailId]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
