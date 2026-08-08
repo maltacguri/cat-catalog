@@ -78,6 +78,13 @@ body{
   width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.92);border:none;
   font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;
   box-shadow:0 2px 10px rgba(0,0,0,.1);z-index:55}
+
+/* 북마크 원탭 (§2.12) — back-btn과 같은 원형 오버레이 자리, 반대쪽 모서리 */
+.dp-bookmark-btn{position:absolute;top:calc(20px + env(safe-area-inset-top));right:20px;
+  width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.92);border:none;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 10px rgba(0,0,0,.1);z-index:55;color:var(--token-ink)}
+.dp-bookmark-btn.is-on{color:var(--token-deep-green)}
 .dp-body{padding:24px 20px}
 .dp-title{font-family:"Gowun Batang",serif;font-size:32px;font-weight:700;margin-bottom:8px}
 .dp-subtitle{font-size:15px;font-weight:500;margin-bottom:6px}
@@ -373,6 +380,24 @@ body{
 .nearby-gate{display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:14px;text-align:center;padding:0 24px}
 
+
+/* ── 마이캣 (MyCatPage, §2.12) ─────────────── */
+.mycat{
+  position:absolute; inset:0; overflow-y:auto; overflow-x:hidden;
+  background:var(--token-paper); color:var(--token-ink);
+  font-family:var(--token-font-body); padding:16px 16px 90px;
+}
+.mycat-head{margin:6px 0 14px}
+.mycat-title{font-family:var(--token-font-title);font-size:24px;font-weight:700}
+.mycat-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.mycat-badge{font-family:var(--token-font-body);font-size:11px;font-weight:700;
+  color:var(--token-deep-green);background:var(--token-sage);border-radius:999px;padding:3px 10px}
+.mycat-gate{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:14px;text-align:center;padding:0 24px;
+  background:var(--token-paper);color:var(--token-ink);font-family:var(--token-font-body)}
+.mycat-login{display:inline-flex;align-items:center;background:var(--token-deep-green);
+  color:var(--token-paper);border:none;border-radius:20px;padding:10px 18px;font-size:14px;
+  font-weight:700;cursor:pointer}
 
 /* ── 집사 프로필 (MePage, §2.8-15) ─────────────── */
 .me{
