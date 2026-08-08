@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Map } from 'react-kakao-maps-sdk';
+import { Bookmark } from 'lucide-react';
 import CatPhoto from './CatPhoto';
 import { fetchCatDetail, fetchCampus } from '../api/cats';
 import { addFeeding, isTooSoon } from '../api/feedings';
 import { addSighting } from '../api/sightings';
+import { toggleBookmark, isBookmarked } from '../api/bookmarks';
 import { useSession } from '../api/auth';
 import { useAppUI } from './AppUI';
 import { agoKo, agoCoarseKo, SEX_KO, KIND_KO, KIND_ORDER, COPY } from '../lib/format';
@@ -19,6 +21,7 @@ export default function CatDetailPage({ catId, onClose }) {
   const [cat, setCat] = useState(null);
   const [saving, setSaving] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
 
   const [sightOpen, setSightOpen] = useState(false);
   const [sightCenter, setSightCenter] = useState(null);
@@ -37,6 +40,15 @@ export default function CatDetailPage({ catId, onClose }) {
     return () => { alive = false; };
   }, [catId]);
 
+  // 북마크 초기 상태 (§2.12) — 상세 페이지가 자립형으로 유지되도록 별도 effect로 분리
+  useEffect(() => {
+    setBookmarked(false);
+    if (!catId || !loggedIn) return;
+    let alive = true;
+    isBookmarked(catId).then((b) => { if (alive) setBookmarked(b); }).catch(console.error);
+    return () => { alive = false; };
+  }, [catId, loggedIn]);
+
   // 오버레이 슬라이드 중 지도가 마운트되면 카카오가 타일을 어긋나게 그린다 → 끝난 뒤 relayout
   useEffect(() => {
     if (!sightOpen) return;
@@ -47,6 +59,19 @@ export default function CatDetailPage({ catId, onClose }) {
   function openPicker() {
     if (!loggedIn) { openAuth(COPY.writeLocked); return; }
     setPickerOpen(true);
+  }
+
+  // 북마크 원탭 (§2.12) — 낙관적 업데이트, 실패 시 롤백. soft-delete 아니고 실제 DELETE다.
+  async function handleBookmarkToggle() {
+    if (!loggedIn) { openAuth(COPY.writeLocked); return; }
+    const prev = bookmarked;
+    setBookmarked(!prev);
+    try {
+      await toggleBookmark(catId, prev);
+    } catch (e) {
+      setBookmarked(prev);
+      console.error(e);
+    }
   }
 
   async function handleFeed(kind) {
@@ -123,6 +148,13 @@ export default function CatDetailPage({ catId, onClose }) {
   return (
     <div className={`detail-page ${catId ? 'show' : ''}`}>
       <button className="back-btn" onClick={onClose} aria-label="닫기">←</button>
+      <button
+        className={`dp-bookmark-btn ${bookmarked ? 'is-on' : ''}`}
+        onClick={handleBookmarkToggle}
+        aria-label={bookmarked ? '북마크 해제' : '북마크'}
+      >
+        <Bookmark size={18} fill={bookmarked ? 'currentColor' : 'none'} />
+      </button>
 
       {cat && (
         <>

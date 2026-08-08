@@ -50,3 +50,20 @@ export async function fetchMyFeedCounts() {
   });
   return counts;
 }
+
+/** 내가 급식한 고양이별 마지막 fed_at (§2.12, MyCatPage "밥 준 적 있음"). */
+export async function fetchMyFeedTouches() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return {};
+
+  const { data, error } = await supabase.from('feedings')
+    .select('cat_id, fed_at').eq('giver_id', user.id);
+  if (error) throw error;
+
+  const lastFedByCat = {};
+  (data ?? []).forEach((f) => {
+    const prev = lastFedByCat[f.cat_id];
+    if (!prev || new Date(f.fed_at) > new Date(prev)) lastFedByCat[f.cat_id] = f.fed_at;
+  });
+  return lastFedByCat;
+}
