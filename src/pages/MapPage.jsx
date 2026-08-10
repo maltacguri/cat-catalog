@@ -36,19 +36,14 @@ export default function MapPage() {
   // ★ 초기 지도 중심을 사용자 현재 위치로 — 마운트당 1회만 시도.
   //   실패(권한 거부·타임아웃·미지원)해도 아무것도 하지 않는다 — 캠퍼스 중심이 그대로 폴백.
   //   좌표는 setCenter 호출 + userPos 표시에만 쓰고 버린다 (DB·localStorage 저장 없음). 게스트도 동일하게 동작.
-  useEffect(() => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude: lat, longitude: lng } = pos.coords;
-        setUserPos({ lat, lng });   // 지도 준비 여부와 무관하게 항상 반영
-        if (!mapRef.current) return;   // 지도가 아직 준비 전이면 setCenter 만 무시
-        mapRef.current.setCenter(new window.kakao.maps.LatLng(lat, lng));
-      },
-      () => {},
-      { enableHighAccuracy: false, timeout: 5000, maximumAge: 300000 }
-    );
-  }, []);
+useEffect(() => {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(
+    (pos) => setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude }), 
+    () => {},
+    { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
+  );
+}, []);
 
   // 로그인 상태가 바뀌면 읽는 뷰가 달라지므로 다시 불러온다 (§2.2)
   useEffect(() => {
@@ -139,7 +134,7 @@ export default function MapPage() {
       <div className="map-host">
         {!kakaoLoading && campus && (
           <Map
-            center={{ lat: campus.center_lat, lng: campus.center_lng }}
+            center={userPos ?? { lat: campus.center_lat, lng: campus.center_lng }}
             level={3}
             style={{ width: '100%', height: '100%' }}
             onCreate={(m) => { mapRef.current = m; }}
