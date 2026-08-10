@@ -29,8 +29,26 @@ export default function MapPage() {
   const [registerOpen, setRegisterOpen] = useState(false);
   const [registerCenter, setRegisterCenter] = useState(null);  // 등록 폼 미니 지도 초기 중심
   const [error, setError] = useState(null);
+  const [userPos, setUserPos] = useState(null);   // ★ 내 위치 점(정적) 표시용
 
   const mapRef = useRef(null);   // 지도 인스턴스 — 등록 시 현재 중심을 읽는다
+
+  // ★ 초기 지도 중심을 사용자 현재 위치로 — 마운트당 1회만 시도.
+  //   실패(권한 거부·타임아웃·미지원)해도 아무것도 하지 않는다 — 캠퍼스 중심이 그대로 폴백.
+  //   좌표는 setCenter 호출 + userPos 표시에만 쓰고 버린다 (DB·localStorage 저장 없음). 게스트도 동일하게 동작.
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude: lat, longitude: lng } = pos.coords;
+        setUserPos({ lat, lng });   // 지도 준비 여부와 무관하게 항상 반영
+        if (!mapRef.current) return;   // 지도가 아직 준비 전이면 setCenter 만 무시
+        mapRef.current.setCenter(new window.kakao.maps.LatLng(lat, lng));
+      },
+      () => {},
+      { enableHighAccuracy: false, timeout: 5000, maximumAge: 300000 }
+    );
+  }, []);
 
   // 로그인 상태가 바뀌면 읽는 뷰가 달라지므로 다시 불러온다 (§2.2)
   useEffect(() => {
@@ -154,6 +172,12 @@ export default function MapPage() {
                 </svg>
               </CustomOverlayMap>
             ))}
+
+            {userPos && (
+              <CustomOverlayMap position={userPos} zIndex={1}>
+                <div className="me-dot" />
+              </CustomOverlayMap>
+            )}
           </Map>
         )}
         {error && <div className="center-note">{error}</div>}
