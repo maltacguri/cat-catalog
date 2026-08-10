@@ -57,4 +57,5 @@ export const COPY = {
   detailLocked: '로그인하면 다른 집사들이 올린 다른 냥이 사진, 건강 정보까지 볼 수 있어요.',
   writeLocked: '로그인하면 기록할 수 있어요.',
   tabLocked: '로그인하면 더 많은 정보를 볼 수 있어요',
+  deletedGiver: '탈퇴한 집사',
 };

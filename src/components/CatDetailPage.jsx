@@ -193,8 +193,11 @@ export default function CatDetailPage({ catId, onClose }) {
                 {cat.feedings.map((f) => (
                   <li key={f.id}>
                     <b>{KIND_KO[f.kind]}</b>
-                    {/* ★ 누가 줬는지 (§2.8-14) — 못 읽으면 '집사'로 폴백 */}
-                    <span>{(f.giver ?? '집사')} · {agoKo(f.fed_at)}</span>
+                    {/* ★ 누가 줬는지 (§2.8-14). giver_id가 없으면 탈퇴로 CASCADE된 것 —
+                        일반 폴백('집사')과 구분해 보여준다. */}
+                    <span>
+                      {f.giver ?? (f.giver_id ? '집사' : COPY.deletedGiver)} · {agoKo(f.fed_at)}
+                    </span>
                   </li>
                 ))}
               </ul>

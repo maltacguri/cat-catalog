@@ -1,0 +1,45 @@
+[1mdiff --git a/src/pages/MapPage.jsx b/src/pages/MapPage.jsx[m
+[1mindex 58cf657..c85239c 100644[m
+[1m--- a/src/pages/MapPage.jsx[m
+[1m+++ b/src/pages/MapPage.jsx[m
+[36m@@ -29,9 +29,27 @@[m [mexport default function MapPage() {[m
+   const [registerOpen, setRegisterOpen] = useState(false);[m
+   const [registerCenter, setRegisterCenter] = useState(null);  // 등록 폼 미니 지도 초기 중심[m
+   const [error, setError] = useState(null);[m
+[32m+[m[32m  const [userPos, setUserPos] = useState(null);   // ★ 내 위치 점(정적) 표시용[m
+ [m
+   const mapRef = useRef(null);   // 지도 인스턴스 — 등록 시 현재 중심을 읽는다[m
+ [m
+[32m+[m[32m  // ★ 초기 지도 중심을 사용자 현재 위치로 — 마운트당 1회만 시도.[m
+[32m+[m[32m  //   실패(권한 거부·타임아웃·미지원)해도 아무것도 하지 않는다 — 캠퍼스 중심이 그대로 폴백.[m
+[32m+[m[32m  //   좌표는 setCenter 호출 + userPos 표시에만 쓰고 버린다 (DB·localStorage 저장 없음). 게스트도 동일하게 동작.[m
+[32m+[m[32m  useEffect(() => {[m
+[32m+[m[32m    if (!navigator.geolocation) return;[m
+[32m+[m[32m    navigator.geolocation.getCurrentPosition([m
+[32m+[m[32m      (pos) => {[m
+[32m+[m[32m        const { latitude: lat, longitude: lng } = pos.coords;[m
+[32m+[m[32m        setUserPos({ lat, lng });   // 지도 준비 여부와 무관하게 항상 반영[m
+[32m+[m[32m        if (!mapRef.current) return;   // 지도가 아직 준비 전이면 setCenter 만 무시[m
+[32m+[m[32m        mapRef.current.setCenter(new window.kakao.maps.LatLng(lat, lng));[m
+[32m+[m[32m      },[m
+[32m+[m[32m      () => {},[m
+[32m+[m[32m      { enableHighAccuracy: false, timeout: 5000, maximumAge: 300000 }[m
+[32m+[m[32m    );[m
+[32m+[m[32m  }, []);[m
+[32m+[m
+   // 로그인 상태가 바뀌면 읽는 뷰가 달라지므로 다시 불러온다 (§2.2)[m
+   useEffect(() => {[m
+     (async () => {[m
+[36m@@ -154,6 +172,12 @@[m [mexport default function MapPage() {[m
+                 </svg>[m
+               </CustomOverlayMap>[m
+             ))}[m
+[32m+[m
+[32m+[m[32m            {userPos && ([m
+[32m+[m[32m              <CustomOverlayMap position={userPos} zIndex={1}>[m
+[32m+[m[32m                <div className="me-dot" />[m
+[32m+[m[32m              </CustomOverlayMap>[m
+[32m+[m[32m            )}[m
+           </Map>[m
+         )}[m
+         {error && <div className="center-note">{error}</div>}[m
