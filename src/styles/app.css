@@ -39,7 +39,7 @@ body{
 .searchpill > div:nth-child(2){flex:1}
 
 /* 마커 */
-.pin{width:42px;height:52px;display:block;cursor:pointer;
+.pin{width:62px;height:62px;display:block;cursor:pointer;
   filter:drop-shadow(0 4px 6px rgba(0,0,0,.3));transition:transform .2s}
 .pin.selected{transform:scale(1.15)}
 
@@ -158,6 +158,17 @@ body{
 .dp-sight-head{font-family:var(--token-font-title);font-size:19px;font-weight:700;
   color:var(--token-ink);text-align:center}
 .dp-sight-actions{display:flex;gap:8px;margin-top:4px}
+
+/* 목격 사진 첨부 (§2.3 개정) — .pf-picker와 같은 톤, 시트 폭에 맞춘 별도 클래스 */
+.dp-sight-photo-picker{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:fit-content;padding:10px 16px;border-radius:10px;
+  background:var(--token-sage);color:var(--token-ink);
+  font-family:var(--token-font-body);font-size:14px;font-weight:600;cursor:pointer;
+}
+.dp-sight-photo-picker input{display:none}
+.dp-sight-photo-picker.is-busy{opacity:.55;pointer-events:none;cursor:default}
+.dp-sight-photo-preview img{display:block;width:100%;max-width:220px;border-radius:10px}
 .dp-sight-cancel{flex:1;padding:13px;border-radius:12px;font-size:15px;font-weight:700;
   cursor:pointer;font-family:inherit;background:var(--token-paper);color:var(--token-ink);
   border:1px solid rgba(42,42,36,.18)}

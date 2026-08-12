@@ -5,6 +5,8 @@ import CatPhoto from './CatPhoto';
 import { fetchCatDetail, fetchCampus } from '../api/cats';
 import { addFeeding, isTooSoon } from '../api/feedings';
 import { addSighting } from '../api/sightings';
+import { uploadSightingPhoto } from '../api/photos';
+import { sanitizeImage } from '../lib/image';
 import { toggleBookmark, isBookmarked } from '../api/bookmarks';
 import { useSession } from '../api/auth';
 import { useAppUI } from './AppUI';
@@ -29,6 +31,16 @@ export default function CatDetailPage({ catId, onClose }) {
   const [sightError, setSightError] = useState(null);
   const [sightDone, setSightDone] = useState(false);
   const sightMapRef = useRef(null);   // 제출 시점에 지도 중심을 읽는다 (CatRegisterForm 과 같은 패턴)
+
+  const [sightFile, setSightFile] = useState(null);
+  const [sightPreview, setSightPreview] = useState(null);
+  const [sightPhotoBusy, setSightPhotoBusy] = useState(false);
+  const [sightPhotoError, setSightPhotoError] = useState(null);
+
+  // 미리보기 URL은 다음 파일로 교체되거나 시트가 닫힐 때 해제한다 (PhotoField.jsx와 같은 패턴)
+  useEffect(() => () => {
+    if (sightPreview) URL.revokeObjectURL(sightPreview);
+  }, [sightPreview]);
 
   useEffect(() => {
     setCat(null);
@@ -125,6 +137,31 @@ export default function CatDetailPage({ catId, onClose }) {
     setSightDone(false);
     setSightError(null);
     setSightCenter(null);
+    setSightFile(null);
+    setSightPreview(null);
+    setSightPhotoBusy(false);
+    setSightPhotoError(null);
+  }
+
+  // 목격 사진은 이 시점에 업로드하지 않는다 — 미리보기만 만들고, 실제 업로드는 제출 시(submitSighting)
+  async function handleSightPhotoChange(e) {
+    const picked = e.target.files?.[0];
+    e.target.value = '';   // 같은 파일을 다시 골라도 onChange가 또 뜨게
+    if (!picked) return;
+
+    setSightPhotoError(null);
+    setSightFile(null);
+    setSightPreview(null);
+    setSightPhotoBusy(true);
+    try {
+      const { blob } = await sanitizeImage(picked);   // 원칙 4 — EXIF 제거를 통과한 결과만 미리보기로
+      setSightFile(picked);
+      setSightPreview(URL.createObjectURL(blob));
+    } catch (err) {
+      setSightPhotoError(err.message || String(err));
+    } finally {
+      setSightPhotoBusy(false);
+    }
   }
 
   async function submitSighting() {
@@ -134,10 +171,14 @@ export default function CatDetailPage({ catId, onClose }) {
     setSightSaving(true);
     setSightError(null);
     try {
-      await addSighting({ catId, lat: c.getLat(), lng: c.getLng() });
+      let photoPath = null;
+      if (sightFile) photoPath = (await uploadSightingPhoto(sightFile, { catId })).path;
+      await addSighting({ catId, lat: c.getLat(), lng: c.getLng(), photoPath });
       setSightDone(true);
-      // ★ 화면의 마지막 목격 표시는 일부러 안 건드린다 — 1시간 지연은 DB 뷰가 강제하는
-      //   비협상 규칙이다(§2.3). 여기서 좌표를 덮어쓰거나 다시 조회하지 않는다.
+      // ★ 목격의 좌표·시간 표시는 일부러 다시 안 맞춘다 — cats_full 은 security_invoker 가 꺼져 있어
+      //   재조회해도 1시간 지연이 뷰 단에서 그대로 유지된다(§2.3, 비협상). 여기서 재조회하는 건
+      //   방금 올린 사진을 "다른 사진들" 갤러리에 바로 반영하기 위해서일 뿐이다.
+      if (photoPath) { const d = await fetchCatDetail(catId); setCat(d); }
     } catch (e) {
       setSightError(e.message || String(e));
     } finally {
@@ -265,6 +306,23 @@ export default function CatDetailPage({ catId, onClose }) {
                       )}
                       <div className="rf-pin" aria-hidden>📍</div>
                     </div>
+
+                    <label className={`dp-sight-photo-picker ${sightPhotoBusy ? 'is-busy' : ''}`}>
+                      <input
+                        type="file" accept="image/*"
+                        onChange={handleSightPhotoChange} disabled={sightPhotoBusy}
+                      />
+                      {sightPhotoBusy ? '변환 중…' : '사진 추가 (선택)'}
+                    </label>
+                    {sightPhotoError && (
+                      <div className="pf-upload-status pf-upload-error">{sightPhotoError}</div>
+                    )}
+                    {sightPreview && (
+                      <div className="dp-sight-photo-preview">
+                        <img src={sightPreview} alt="목격 사진 미리보기" />
+                      </div>
+                    )}
+
                     <span className="rf-hint">{COPY.blurNotice}</span>
                     {sightError && (
                       <div className="pf-upload-status pf-upload-error">{sightError}</div>

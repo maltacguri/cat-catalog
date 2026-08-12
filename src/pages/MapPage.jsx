@@ -12,6 +12,9 @@ import CatFloatingCard from '../components/CatFloatingCard';
 import CatRegisterForm from '../components/CatRegisterForm';
 import RegisterConfirm from '../components/RegisterConfirm';        // ★ 추가
 
+const PAW_INK  = '#343434';
+const PAW_PINK = '#F7ADAD';
+
 export default function MapPage() {
   const [kakaoLoading, kakaoError] = useKakaoLoader({
     appkey: import.meta.env.VITE_KAKAO_MAP_KEY,
@@ -155,15 +158,28 @@ useEffect(() => {
             ))}
 
             {pins.map(({ cat, pos }) => (
-              <CustomOverlayMap key={cat.id} position={pos} yAnchor={1} zIndex={2}>
+              <CustomOverlayMap key={cat.id} position={pos} zIndex={2}>
                 <svg
                   className={`pin ${selectedId === cat.id ? 'selected' : ''}`}
-                  viewBox="0 0 46 56"
+                  viewBox="0 0 96 96"
                   onClick={(e) => { e.stopPropagation(); setSelectedId(cat.id); }}
                 >
-                  <path d="M23 55C23 55 42 34 42 21A19 19 0 1 0 4 21C4 34 23 55 23 55Z" fill="#222" />
-                  <circle cx="23" cy="20" r="14" fill="#fff" />
-                  <circle cx="23" cy="21" r="9.5" fill="#E8A94C" />
+                  <circle cx="48" cy="48" r="31" fill={PAW_PINK} fillOpacity="0.43" />
+                  <circle cx="48" cy="48" r="31" fill="none" stroke={PAW_PINK} strokeOpacity="0.9" strokeWidth="1" />
+                  <g fill={PAW_INK}>
+                    <ellipse cx="36.4" cy="43.2" rx="5.9"  ry="6.9"  transform="rotate(-20 36.4 43.2)" />
+                    <ellipse cx="44"   cy="38"   rx="5.9"  ry="7.3"  transform="rotate(-7 44 38)" />
+                    <ellipse cx="52"   cy="38"   rx="5.9"  ry="7.3"  transform="rotate(7 52 38)" />
+                    <ellipse cx="59.6" cy="43.2" rx="5.9"  ry="6.9"  transform="rotate(20 59.6 43.2)" />
+                    <ellipse cx="48"   cy="52.8" rx="13.4" ry="10.4" />
+                  </g>
+                  <g fill={PAW_PINK}>
+                    <ellipse cx="36.5" cy="43.6" rx="3.2" ry="3.9" transform="rotate(-20 36.5 43.6)" />
+                    <ellipse cx="44.1" cy="38.6" rx="3.2" ry="4.2" transform="rotate(-7 44.1 38.6)" />
+                    <ellipse cx="51.9" cy="38.6" rx="3.2" ry="4.2" transform="rotate(7 51.9 38.6)" />
+                    <ellipse cx="59.5" cy="43.6" rx="3.2" ry="3.9" transform="rotate(20 59.5 43.6)" />
+                    <path d="M48 46 Q56.6 48.4 57.6 52.1 Q58 56.2 48 58.8 Q38 56.2 38.4 52.1 Q39.4 48.4 48 46 Z" />
+                  </g>
                 </svg>
               </CustomOverlayMap>
             ))}

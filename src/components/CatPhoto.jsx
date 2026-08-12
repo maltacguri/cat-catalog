@@ -1,12 +1,12 @@
-import { coverUrl, useGalleryUrl } from '../api/photos';
+import { coverUrl, useGalleryThumbUrl } from '../api/photos';
 
 /**
  * kind="cover"   → 대표 사진. 누구나 보인다 (§2.4)
- * kind="gallery" → 목격 사진. 로그인해야 보인다
+ * kind="gallery" → 목격 사진. 로그인해야 보인다. 썸네일 우선, 없으면 원본으로 폴백
  */
 export default function CatPhoto({ path, kind = 'gallery', alt, className, loggedIn }) {
   // 훅은 조건부로 못 쓰니 항상 부르고, cover 일 때는 null 을 넘긴다.
-  const signed = useGalleryUrl(kind === 'gallery' ? path : null);
+  const signed = useGalleryThumbUrl(kind === 'gallery' ? path : null);
   const url = kind === 'cover' ? coverUrl(path) : signed;
 
   if (url) return <img className={className} src={url} alt={alt ?? ''} loading="lazy" />;

@@ -33,6 +33,30 @@ export function useGalleryUrl(path) {
   return url;
 }
 
+/** 원본 경로 → 썸네일 경로. uploadSightingPhoto가 만드는 `{...}_thumb.jpg` 규칙과 짝을 맞춘다. */
+export const thumbPathOf = (path) => (path ? path.replace(/\.jpg$/, '_thumb.jpg') : null);
+
+/**
+ * 갤러리용 썸네일 서명 URL. 썸네일을 먼저 시도하고(순차), 없으면(null) 원본 path로 폴백한다.
+ * 썸네일이 없는 옛 데이터(사진 첫 도입 이전 등)도 그대로 보이게 하기 위한 폴백이다.
+ */
+export function useGalleryThumbUrl(path) {
+  const [url, setUrl] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    if (!path) { setUrl(null); return; }
+    (async () => {
+      const thumb = await galleryUrl(thumbPathOf(path));
+      if (!alive) return;
+      if (thumb) { setUrl(thumb); return; }
+      const original = await galleryUrl(path);
+      if (alive) setUrl(original);
+    })();
+    return () => { alive = false; };
+  }, [path]);
+  return url;
+}
+
 async function upload(bucket, path, blob) {
   const { error } = await supabase.storage.from(bucket).upload(path, blob, {
     contentType: 'image/jpeg', cacheControl: '3600', upsert: false,
