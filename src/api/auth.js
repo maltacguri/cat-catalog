@@ -71,11 +71,31 @@ export async function fetchMyProfile() {
   if (!user) return null;
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, nickname, role, campus_id')
+    .select('id, nickname, role, campus_id, onboarded_at, home_guide_seen_at')
     .eq('id', user.id)
     .single();
   if (error) throw error;
   return data;
+}
+
+export async function markOnboarded() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  const { error } = await supabase
+    .from('profiles')
+    .update({ onboarded_at: new Date().toISOString() })
+    .eq('id', user.id);
+  if (error) throw error;
+}
+
+export async function markHomeGuideSeen() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  const { error } = await supabase
+    .from('profiles')
+    .update({ home_guide_seen_at: new Date().toISOString() })
+    .eq('id', user.id);
+  if (error) throw error;
 }
 
 export function useSession() {

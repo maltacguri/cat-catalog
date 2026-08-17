@@ -15,6 +15,9 @@
   --token-ink:#2A2A24;
   --token-font-title:'Gaegu','Noto Sans KR',sans-serif;
   --token-font-body:'Gowun Dodum','Noto Sans KR',sans-serif;
+
+  /* 서약서 증서(PledgeOverlay step 1) 전용. 다른 화면에서는 쓰지 않는다 */
+  --pledge-serif:'Nanum Myeongjo',serif;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
 html,body,#root{height:100%}
@@ -212,6 +215,94 @@ body{
 .welcome-msg{font-family:var(--token-font-body);font-size:14px;color:var(--token-ink);
   line-height:1.6;margin-bottom:16px}
 .welcome-panel .btn-primary{margin-bottom:0}
+
+/* 서약서 증서 (PledgeOverlay step 1, §2.7-7) — 전체화면, 다크모드 무시, 색 하드코딩.
+   .phone 프레임을 꽉 채운다. 다른 화면 토큰과 무관한 값이라 이 블록 안에서만 쓴다.
+   도장 한 번이 유일한 조작 지점 — 체크박스 없음. */
+.pledge-cert{
+  position:absolute;inset:0;z-index:80;
+  display:flex;flex-direction:column;
+  background:#FAF7F0;padding:8px;
+}
+.pledge-cert-outer{
+  display:flex;flex-direction:column;flex:1;min-height:0;
+  border:2.5px solid #1F1B15;padding:2.5px;
+}
+.pledge-cert-inner{
+  display:flex;flex-direction:column;flex:1;min-height:0;overflow-y:auto;
+  border:1px solid #1F1B15;padding:22px 20px 18px;
+  font-family:var(--pledge-serif);font-weight:700;color:#1F1B15;
+}
+.pledge-cert-preamble{text-align:center;font-size:14px;line-height:1.9;
+  color:#3A342A;margin-bottom:14px}
+.pledge-cert-heading{display:block;text-align:center;font-size:30px;
+  letter-spacing:6px;padding-left:6px;margin-bottom:20px;color:#1F1B15}
+.pledge-cert-clauses{list-style:none;flex:1;min-height:0;
+  display:flex;flex-direction:column;justify-content:space-around}
+.pledge-cert-clause{display:flex;gap:7px}
+.pledge-cert-num{flex-shrink:0}
+.pledge-cert-clause-text{flex:1;text-align:left;font-size:15.5px;line-height:1.6}
+.pledge-cert-date{text-align:center;font-size:14px;letter-spacing:1px;margin:18px 0 8px}
+.pledge-cert-signee{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.pledge-cert-signee-label{font-size:14px;line-height:1.5;text-align:right}
+.pledge-cert-stampbtn{
+  width:72px;height:72px;flex-shrink:0;padding:0;appearance:none;
+  border:none;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.pledge-cert-stampbtn.is-empty{
+  border:2px dashed #A8845C;border-radius:50%;background:#F4EEDF;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+}
+.pledge-cert-stamp-in{font-family:var(--pledge-serif);font-weight:700;
+  font-size:15px;color:#8A5A32}
+.pledge-cert-stamp-hint{font-family:var(--token-font-body);font-size:9.5px;color:#A8845C}
+.pledge-cert-stampbtn.is-stamped{
+  transform:rotate(-9deg);cursor:default;
+  display:flex;align-items:center;justify-content:center;
+}
+.pledge-cert-bar{display:flex;align-items:center;flex-shrink:0;
+  padding:10px 2px 0;font-family:var(--token-font-body)}
+.pledge-cert-hint{font-size:13px;color:#8A5A32}
+.pledge-cert-submit{margin-left:auto;font-size:14px;
+  background:#1F1B15;color:#FAF7F0;border:none;border-radius:2px;
+  padding:9px 20px;cursor:pointer;font-family:var(--token-font-body)}
+.pledge-cert-submit:disabled{background:none;border:1px solid #D8D0BE;
+  color:#B5AB94;cursor:default}
+
+/* 에티켓 (PledgeOverlay step 2, §2.7-7) — welcome-panel과 같은 z-index(.sheet-backdrop) */
+.pledge-panel{background:var(--token-paper);border-radius:16px;
+  width:100%;max-width:360px;margin:0 auto;
+  display:flex;flex-direction:column;max-height:calc(100dvh - 64px);
+  box-shadow:0 10px 40px rgba(0,0,0,.25);overflow:hidden}
+.pledge-scroll{overflow-y:auto;padding:24px 20px 8px}
+.pledge-title{display:block;font-family:var(--token-font-title);font-size:20px;
+  color:var(--token-deep-green);margin-bottom:14px}
+.pledge-etiquette{list-style:decimal;padding-left:18px;display:flex;flex-direction:column;gap:12px}
+.pledge-etiquette li{font-family:var(--token-font-body);font-size:13px;
+  color:var(--token-ink);line-height:1.6}
+.pledge-quote{margin:16px 0 4px;padding:12px 14px;border-left:3px solid var(--token-amber);
+  background:var(--token-sage);border-radius:0 10px 10px 0;
+  font-family:var(--token-font-body);font-size:13px;color:var(--token-ink);line-height:1.6}
+.pledge-footer{padding:12px 20px calc(16px + env(safe-area-inset-bottom))}
+.pledge-footer .btn-primary{margin-bottom:0}
+
+/* 홈 화면 사용법 오버레이 (§2.7-7 후속) — welcome-panel과 같은 z-index(.sheet-backdrop) */
+.homeguide-panel{background:var(--token-paper);border-radius:16px;
+  width:100%;max-width:360px;margin:0 auto;
+  display:flex;flex-direction:column;max-height:calc(100dvh - 64px);
+  box-shadow:0 10px 40px rgba(0,0,0,.25);overflow:hidden}
+.homeguide-scroll{overflow-y:auto;padding:24px 20px 8px}
+.homeguide-title{display:block;font-family:var(--token-font-title);font-size:20px;
+  color:var(--token-deep-green);margin-bottom:14px}
+.homeguide-list{list-style:none;display:flex;flex-direction:column;gap:14px}
+.homeguide-item{display:flex;align-items:flex-start;gap:10px}
+.homeguide-item span{font-family:var(--token-font-body);font-size:13px;
+  color:var(--token-ink);line-height:1.5}
+.homeguide-quote{margin:18px 0 4px;padding:12px 14px;border-left:3px solid var(--token-amber);
+  background:var(--token-sage);border-radius:0 10px 10px 0;
+  font-family:var(--token-font-body);font-size:13px;color:var(--token-ink);line-height:1.6}
+.homeguide-footer{padding:12px 20px calc(16px + env(safe-area-inset-bottom))}
+.homeguide-footer .btn-primary{margin-bottom:0}
 
 .center-note{position:absolute;inset:0;display:flex;align-items:center;
   justify-content:center;text-align:center;padding:32px;color:var(--muted);
@@ -475,3 +566,32 @@ body{
   cursor:pointer;font-family:inherit;margin-top:8px}
 .rc-line{background:var(--paper);color:var(--ink);border:1px solid var(--line)}
 .rc-fill{background:var(--token-ink);color:#fff;border:none}
+
+  /* ── 이용 안내 오버레이 (NoticePanel, §2.16) ─────────────── */
+.notice-body{text-align:left}
+.notice-section{margin-top:28px}
+.notice-section:first-child{margin-top:8px}
+.notice-section-title{font-family:var(--token-font-title);font-size:17px;font-weight:700;
+  color:var(--token-ink);line-height:1.4;margin-bottom:10px}
+.notice-section-body{font-family:var(--token-font-body);font-size:14px;color:var(--token-ink);
+  opacity:.8;line-height:1.7;margin-bottom:10px}
+.notice-section-body:last-child{margin-bottom:0}
+
+  /* ── 고양이 관련 요청 (ReportPanel, §2.16) ─────────────── */
+.report-list{width:100%;margin-top:28px;text-align:left}
+.report-list-title{font-family:var(--token-font-body);font-size:13px;font-weight:700;
+  color:var(--token-ink);opacity:.5;margin-bottom:8px}
+.report-list-empty{font-family:var(--token-font-body);font-size:14px;color:var(--token-ink);
+  opacity:.6}
+.report-item{padding:10px 0;border-bottom:1px solid rgba(42,42,36,.1)}
+.report-item-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.report-item-date{font-family:var(--token-font-body);font-size:12px;color:var(--token-ink);
+  opacity:.5}
+.report-item-kind{font-family:var(--token-font-body);font-size:14px;color:var(--token-ink)}
+.report-badge{margin-left:auto;font-family:var(--token-font-body);font-size:12px;font-weight:700;
+  border-radius:999px;padding:2px 10px}
+.report-badge-pending{background:var(--token-sage);color:var(--token-ink)}
+.report-badge-resolved{background:var(--token-deep-green);color:#fff}
+.report-badge-rejected{background:var(--token-amber);color:var(--token-paper)}
+.report-item-admin{font-family:var(--token-font-body);font-size:13px;color:var(--token-ink);
+  opacity:.7;margin-top:4px}
