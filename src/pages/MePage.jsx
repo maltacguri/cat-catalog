@@ -7,6 +7,8 @@ import { fetchMyFeedCounts } from '../api/feedings';
 import { updateNickname } from '../api/profile';
 import { requestDeletion, fetchMyDeletionRequest } from '../api/account';
 import MeInfoOverlay from '../components/MeInfoOverlay';
+import NoticePanel from '../components/NoticePanel';
+import ReportPanel from '../components/ReportPanel';
 import { KIND_ORDER, KIND_KO } from '../lib/format';
 
 function dateKo(iso) {
@@ -32,7 +34,9 @@ export default function MePage() {
   const [deleteSaving, setDeleteSaving] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
 
-  const [infoOpen, setInfoOpen] = useState(null);   // null | 'guide' | 'privacy'
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [noticeOpen, setNoticeOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
 
   useEffect(() => {
     if (!loggedIn) return;
@@ -122,8 +126,9 @@ export default function MePage() {
         <div className="divider" />
 
         <div className="me-section">안내</div>
-        <button className="me-row" onClick={() => setInfoOpen('guide')}>이용안내</button>
-        <button className="me-row" onClick={() => setInfoOpen('privacy')}>개인정보 처리방침</button>
+        <button className="me-row" onClick={() => setNoticeOpen(true)}>이용 안내</button>
+        <button className="me-row" onClick={() => setReportOpen(true)}>고양이 관련 요청</button>
+        <button className="me-row" onClick={() => setPrivacyOpen(true)}>개인정보 처리방침</button>
         {/* TODO: 실제 문의 메일 주소 확정되면 채운다 */}
         <a className="me-row" href="mailto:">문의하기</a>
 
@@ -184,37 +189,13 @@ export default function MePage() {
         </div>
       )}
 
-      <MeInfoOverlay open={infoOpen === 'guide'} title="이용안내" onClose={() => setInfoOpen(null)}>
-        <p className="me-info-lead">어디냐옹은 캠퍼스에서 함께 사는 길고양이를 기록하는 곳이에요.</p>
-
-        <div className="me-info-block">
-          <p className="me-info-block-title">☑ 목격 기록은 약 1시간 뒤에 보여요</p>
-          <p className="me-info-block-desc">
-            찾아가서 만나는 앱이 아니라, 우연히 마주쳤을 때<br />
-            "아, 얘가 걔구나" 하고 알아보기 위한 기록이에요.
-          </p>
-        </div>
-
-        <div className="me-info-block">
-          <p className="me-info-block-title">☑ 기록이 없다고 굶은 게 아니에요</p>
-          <p className="me-info-block-desc">
-            누군가 밥을 주고 기록을 남기지 않았을 수 있어요.<br />
-            기록은 참고일 뿐이에요.
-          </p>
-        </div>
-
-        <div className="me-info-block">
-          <p className="me-info-block-title">☑ 고정 급식소는 만들지 않아요</p>
-          <p className="me-info-block-desc">
-            급식 기록은 장소가 아니라 고양이 한 마리 한 마리에 붙어요.
-          </p>
-        </div>
-      </MeInfoOverlay>
-
-      <MeInfoOverlay open={infoOpen === 'privacy'} title="개인정보 처리방침" onClose={() => setInfoOpen(null)}>
+      <MeInfoOverlay open={privacyOpen} title="개인정보 처리방침" onClose={() => setPrivacyOpen(false)}>
         {/* TODO: 실제 개인정보 처리방침 본문으로 교체 — 지금은 플레이스홀더 */}
         <p>개인정보 처리방침 본문은 추후 채워집니다.</p>
       </MeInfoOverlay>
+
+      <NoticePanel open={noticeOpen} onClose={() => setNoticeOpen(false)} />
+      <ReportPanel open={reportOpen} onClose={() => setReportOpen(false)} />
     </div>
   );
 }

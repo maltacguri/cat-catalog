@@ -12,6 +12,20 @@ import { useSession } from '../api/auth';
 import { useAppUI } from './AppUI';
 import { agoKo, agoCoarseKo, SEX_KO, KIND_KO, KIND_ORDER, COPY } from '../lib/format';
 
+// 브라우저 현재 위치를 1회 조회한다. 미지원·권한 거부·타임아웃이면 null을 resolve한다(throw 없음).
+// maximumAge 60000 — MapPage 마운트 때 받아둔 좌표가 캐시에 남아 있으면 즉시 반환된다.
+// 좌표는 지도 시작 중심에만 쓰고 버린다. 저장하지 않는다.
+function getMyPosOnce() {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) { resolve(null); return; }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => resolve(null),
+      { enableHighAccuracy: false, timeout: 2500, maximumAge: 60000 }
+    );
+  });
+}
+
 /**
  * 2단 — 상세 페이지. 플로팅 카드를 누르면 올라온다.
  * 로드맵 §2.2 — 여기부터는 로그인 게이트(RLS). cats_full/sightings/feedings 는 authenticated 전용.
@@ -26,6 +40,7 @@ export default function CatDetailPage({ catId, onClose }) {
   const [bookmarked, setBookmarked] = useState(false);
 
   const [sightOpen, setSightOpen] = useState(false);
+  const [sightOpening, setSightOpening] = useState(false);
   const [sightCenter, setSightCenter] = useState(null);
   const [sightSaving, setSightSaving] = useState(false);
   const [sightError, setSightError] = useState(null);
@@ -112,24 +127,31 @@ export default function CatDetailPage({ catId, onClose }) {
     }
   }
 
-  // 지도 시작 중심 — 이 고양이의 마지막 목격 좌표, 없으면 캠퍼스 중심 (CatRegisterForm 과 같은 패턴)
+  // 지도 시작 중심 — ① 내 현재 위치 ② 실패 시 이 고양이의 마지막 목격 ③ 그것도 없으면 캠퍼스 중심
   async function openSightMap() {
     if (!loggedIn) { openAuth(COPY.writeLocked); return; }
+    if (sightOpening) return;
+    setSightOpening(true);
     setSightError(null);
     setSightDone(false);
-    let center = cat.last_lat != null && cat.last_lng != null
-      ? { lat: cat.last_lat, lng: cat.last_lng }
-      : null;
-    if (!center) {
-      try {
-        const campus = await fetchCampus();
-        center = { lat: campus.center_lat, lng: campus.center_lng };
-      } catch (e) {
-        console.error(e);
+    try {
+      let center = await getMyPosOnce();
+      if (!center && cat?.last_lat != null && cat?.last_lng != null) {
+        center = { lat: cat.last_lat, lng: cat.last_lng };
       }
+      if (!center) {
+        try {
+          const campus = await fetchCampus();
+          center = { lat: campus.center_lat, lng: campus.center_lng };
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      setSightCenter(center);
+      setSightOpen(true);
+    } finally {
+      setSightOpening(false);
     }
-    setSightCenter(center);
-    setSightOpen(true);
   }
 
   function closeSightMap() {
@@ -266,7 +288,9 @@ export default function CatDetailPage({ catId, onClose }) {
               <div className="bb-value">{agoKo(cat.last_fed_at) ?? '기록 없음'}</div>
             </div>
             <div className="bb-actions">
-              <button className="bb-btn bb-btn-line" onClick={openSightMap}>여기서 봤어요</button>
+              <button className="bb-btn bb-btn-line" onClick={openSightMap} disabled={sightOpening}>
+                {sightOpening ? '위치 확인 중…' : '여기서 봤어요'}
+              </button>
               <button className="bb-btn" onClick={openPicker} disabled={saving}>
                 {saving ? '기록 중…' : '밥 주기'}
               </button>
@@ -306,6 +330,7 @@ export default function CatDetailPage({ catId, onClose }) {
                       )}
                       <div className="rf-pin" aria-hidden>📍</div>
                     </div>
+                    <span className="rf-hint">지도를 움직여 고양이를 본 곳에 핀을 맞춰주세요</span>
 
                     <label className={`dp-sight-photo-picker ${sightPhotoBusy ? 'is-busy' : ''}`}>
                       <input

@@ -48,6 +48,12 @@ export default function CatRegisterForm({ open, onClose, initialCenter, onCreate
   // 필수 3종(§2.11): 대표사진 업로드 완료 · 이름 · 색. (위치는 지도에 항상 중심이 있어 자동 충족)
   const canSubmit = !!coverPath && name.trim() !== '' && !!color && !submitting;
 
+  const missing = [
+    !coverPath && '대표 사진',
+    name.trim() === '' && '이름',
+    !color && '색',
+  ].filter(Boolean);
+
   function reset() {
     setCoverPath(null); setName(''); setDescription('');
     setColor(null); setColorOpen(false); setSex('unknown'); setNeutered('unknown');
@@ -95,8 +101,12 @@ export default function CatRegisterForm({ open, onClose, initialCenter, onCreate
         ) : (
           <>
             {/* 대표 사진 — 맨 위, 번호 없음 (업로드 끝나야 coverPath 올라옴, §2.4) */}
-            <div className="rf-photo">
-              <PhotoField onCoverReady={setCoverPath} />
+            <div className="rf-field">
+              <span className="rf-label">대표 사진 <em className="req">*</em></span>
+              <span className="rf-sublabel">한 장은 꼭 필요해요. 다른 사람들도 고양이를 잘 알아볼 수 있는 사진을 선택해 주세요.</span>
+              <div className="rf-photo">
+                <PhotoField onCoverReady={setCoverPath} />
+              </div>
             </div>
 
             {/* 1. 이름 */}
@@ -204,6 +214,9 @@ export default function CatRegisterForm({ open, onClose, initialCenter, onCreate
           <button className="rf-submit" disabled={!canSubmit} onClick={handleSubmit}>
             {submitting ? '등록 중…' : '등록하기'}
           </button>
+          {missing.length > 0 && (
+            <p className="rf-hint">{missing.join(' · ')}을 채워주세요</p>
+          )}
         </div>
       )}
     </div>

@@ -59,9 +59,12 @@ export default function AuthPanel({ session, onClose }) {
 
       {step === 'login' && (
         <>
-          <input type="email" placeholder="이메일" value={email}
+          <label className="auth-label" htmlFor="login-email">이메일 주소</label>
+          <input id="login-email" type="email" value={email}
                  onChange={(e) => setEmail(e.target.value)} />
-          <input type="password" placeholder="비밀번호" value={pw}
+
+          <label className="auth-label" htmlFor="login-pw">비밀번호</label>
+          <input id="login-pw" type="password" value={pw}
                  onChange={(e) => setPw(e.target.value)} />
           <button className="btn-primary" disabled={busy}
                   onClick={() => run(() => signInWithPassword(email, pw))}>
@@ -102,6 +105,9 @@ export default function AuthPanel({ session, onClose }) {
           >
             가입하기
           </button>
+          {(!email || pw.length < 6 || !pw2) && (
+            <p className="auth-hint">이메일과 비밀번호(6자 이상), 비밀번호 확인을 모두 입력해 주세요</p>
+          )}
           <button className="btn-ghost" onClick={() => { setMsg(''); setStep('login'); }}>뒤로</button>
         </>
       )}
@@ -130,12 +136,13 @@ export default function AuthPanel({ session, onClose }) {
 
 function errorKo(e) {
   const m = String(e?.message ?? '');
+  if (m.includes('Unable to validate email address')) return '이메일 주소 형식을 확인해 주세요.';
   if (m.includes('Invalid login credentials')) return '이메일 또는 비밀번호가 맞지 않아요.';
   if (m.includes('Email not confirmed'))
     return '아직 메일 확인이 안 됐어요. 메일함의 링크를 눌러주세요.';
   if (m.includes('Password should be at least'))
     return '비밀번호는 6자 이상이어야 해요.';
-  if (m.includes('For security purposes') || m.includes('after'))
+  if (m.includes('For security purposes'))
     return '잠시 후에 다시 시도해 주세요.';
   if (m.includes('rate limit') || m.includes('Email rate'))
     return '메일을 너무 자주 보냈어요. 잠시 후 다시 시도해 주세요.';

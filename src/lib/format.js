@@ -46,6 +46,12 @@ export const COLOR_KO = {
 export const NEUTERED_KO = { yes: '했어요', no: '안 했어요', unknown: '모름' };
 export const NEUTERED_TO_DB = { yes: true, no: false, unknown: null };
 
+// §2.16 고양이 민원 창구. DB 엔 슬러그, 라벨은 표시용 (COLOR_ORDER/COLOR_KO 와 같은 패턴)
+export const REPORT_KIND_KO = {
+  profile: '잘못된 정보·중복 등록', photo: '사진 삭제 요청', other: '기타',
+};
+export const REPORT_STATUS_KO = { pending: '처리 대기', resolved: '처리 완료', rejected: '반려' };
+
 export const COPY = {
   noFeedRecord: '아직 기록이 없어요.',
   feedRecordCaveat:
@@ -58,4 +64,29 @@ export const COPY = {
   writeLocked: '로그인하면 기록할 수 있어요.',
   tabLocked: '로그인하면 더 많은 정보를 볼 수 있어요',
   deletedGiver: '탈퇴한 집사',
+  // §2.16 NoticePanel(「이용 안내」) 본문 — 소제목 + 문단 배열
+  noticeSections: [
+    {
+      title: '이 앱은 고양이를 찾아가라고 만든 게 아니에요',
+      paragraphs: [
+        '캠퍼스에서 우연히 마주친 고양이를 알아보게 하려고 만들었어요. 그래서 지금 어디 있는지는 알려주지 않아요. 실시간 위치도, 알림도, 길 안내도 없어요. 마지막으로 목격된 자리만 남습니다.',
+        '고양이는 사람이 찾아다니기 시작하면 스트레스를 받아요. 알아보는 것과 쫓아다니는 것은 다릅니다.',
+      ],
+    },
+    {
+      title: '위치는 일부러 흐리게 저장해요',
+      paragraphs: [
+        '사진에 담긴 위치정보(GPS)는 올리는 순간 지워져요. 서버에도 남지 않아요. 목격 위치는 50m 단위로 뭉뚱그려 저장해요. 정확한 좌표는 아예 기록되지 않아요. 내가 남긴 목격은 다른 사람에게 약 1시간 뒤부터 보여요.',
+        '번거로워 보여도, 고양이가 사는 자리를 지키려면 이 정도는 필요해요.',
+      ],
+    },
+    {
+      title: '기록이 없다고 굶은 건 아니에요',
+      paragraphs: [
+        '밥 기록은 누가 남겨줬을 때만 쌓여요. 챙겨주고도 기록을 안 남긴 사람이 훨씬 많아요. "6시간째 기록 없음"은 6시간을 굶었다는 뜻이 아니라, 6시간 동안 아무도 기록하지 않았다는 뜻이에요.',
+        '한 마리에게 밥이 몰리는 것도 좋지 않아요. 같은 종류를 2시간 안에 다시 주려고 하면 한 번 더 물어봐요.',
+        '물은 언제든 괜찮아요.',
+      ],
+    },
+  ],
 };
