@@ -286,23 +286,22 @@ body{
 .pledge-footer{padding:12px 20px calc(16px + env(safe-area-inset-bottom))}
 .pledge-footer .btn-primary{margin-bottom:0}
 
-/* 홈 화면 사용법 오버레이 (§2.7-7 후속) — welcome-panel과 같은 z-index(.sheet-backdrop) */
-.homeguide-panel{background:var(--token-paper);border-radius:16px;
-  width:100%;max-width:360px;margin:0 auto;
-  display:flex;flex-direction:column;max-height:calc(100dvh - 64px);
-  box-shadow:0 10px 40px rgba(0,0,0,.25);overflow:hidden}
-.homeguide-scroll{overflow-y:auto;padding:24px 20px 8px}
-.homeguide-title{display:block;font-family:var(--token-font-title);font-size:20px;
-  color:var(--token-deep-green);margin-bottom:14px}
-.homeguide-list{list-style:none;display:flex;flex-direction:column;gap:14px}
-.homeguide-item{display:flex;align-items:flex-start;gap:10px}
-.homeguide-item span{font-family:var(--token-font-body);font-size:13px;
-  color:var(--token-ink);line-height:1.5}
-.homeguide-quote{margin:18px 0 4px;padding:12px 14px;border-left:3px solid var(--token-amber);
-  background:var(--token-sage);border-radius:0 10px 10px 0;
-  font-family:var(--token-font-body);font-size:13px;color:var(--token-ink);line-height:1.6}
-.homeguide-footer{padding:12px 20px calc(16px + env(safe-area-inset-bottom))}
-.homeguide-footer .btn-primary{margin-bottom:0}
+/* 홈 화면 사용법 오버레이 (§2.7-7 후속) — 전체화면 암전형. 하단 시트 아님 */
+.homeguide-veil{position:absolute;inset:0;z-index:70;background:rgba(18,18,14,.88);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:40px 32px calc(32px + env(safe-area-inset-bottom))}
+.homeguide-icon{height:56px;margin-bottom:24px}
+.homeguide-step-title{display:block;font-family:var(--token-font-title);font-size:27px;
+  line-height:1.35;color:#FBF7EF;white-space:pre-line;margin-bottom:16px}
+.homeguide-step-body{max-width:290px;font-family:var(--token-font-body);font-size:15px;
+  line-height:1.75;color:rgba(251,247,239,.76)}
+.homeguide-dots{display:flex;gap:7px;margin-top:36px}
+.homeguide-dot{width:6px;height:6px;border-radius:50%;background:rgba(251,247,239,.28)}
+.homeguide-dot.is-on{background:var(--token-amber)}
+.homeguide-next{min-width:190px;margin-top:26px;padding:13px 24px;border:none;
+  border-radius:999px;background:#FBF7EF;color:var(--token-ink);cursor:pointer;
+  font-family:var(--token-font-body);font-size:15px}
+.homeguide-next:disabled{opacity:.55}
 
 .center-note{position:absolute;inset:0;display:flex;align-items:center;
   justify-content:center;text-align:center;padding:32px;color:var(--muted);
