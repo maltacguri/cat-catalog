@@ -47,6 +47,7 @@ export default function CatDetailPage({ catId, onClose }) {
   const [sightDone, setSightDone] = useState(false);
   const sightMapRef = useRef(null);   // 제출 시점에 지도 중심을 읽는다 (CatRegisterForm 과 같은 패턴)
 
+  const [sightNote, setSightNote] = useState('');
   const [sightFile, setSightFile] = useState(null);
   const [sightPreview, setSightPreview] = useState(null);
   const [sightPhotoBusy, setSightPhotoBusy] = useState(false);
@@ -163,6 +164,7 @@ export default function CatDetailPage({ catId, onClose }) {
     setSightPreview(null);
     setSightPhotoBusy(false);
     setSightPhotoError(null);
+    setSightNote('');
   }
 
   // 목격 사진은 이 시점에 업로드하지 않는다 — 미리보기만 만들고, 실제 업로드는 제출 시(submitSighting)
@@ -195,12 +197,13 @@ export default function CatDetailPage({ catId, onClose }) {
     try {
       let photoPath = null;
       if (sightFile) photoPath = (await uploadSightingPhoto(sightFile, { catId })).path;
-      await addSighting({ catId, lat: c.getLat(), lng: c.getLng(), photoPath });
+      await addSighting({ catId, lat: c.getLat(), lng: c.getLng(), photoPath, note: sightNote });
       setSightDone(true);
       // ★ 목격의 좌표·시간 표시는 일부러 다시 안 맞춘다 — cats_full 은 security_invoker 가 꺼져 있어
       //   재조회해도 1시간 지연이 뷰 단에서 그대로 유지된다(§2.3, 비협상). 여기서 재조회하는 건
-      //   방금 올린 사진을 "다른 사진들" 갤러리에 바로 반영하기 위해서일 뿐이다.
-      if (photoPath) { const d = await fetchCatDetail(catId); setCat(d); }
+      //   방금 남긴 목격을 "목격 기록" 타임라인에 바로 반영하기 위해서일 뿐이다 — 본인 행은
+      //   sightings SELECT 정책의 reporter_id = auth.uid() 예외로 지연 없이 바로 보인다(§2.13).
+      const d = await fetchCatDetail(catId); setCat(d);
     } catch (e) {
       setSightError(e.message || String(e));
     } finally {
@@ -271,15 +274,28 @@ export default function CatDetailPage({ catId, onClose }) {
 
             <div className="divider" />
 
-            <div className="section-title">다른 사진들</div>
-            <div className="gallery">
-              {cat.photos.map((p) => (
-                <div className="gallery-item" key={p.id}>
-                  <CatPhoto path={p.photo_path} kind="gallery" alt={cat.name} loggedIn />
-                </div>
-              ))}
-              {cat.photos.length === 0 && <div className="gallery-item">아직 없어요</div>}
-            </div>
+            <div className="section-title">목격 기록</div>
+            {cat.photos.length > 0 ? (
+              <ul className="sight-log">
+                {cat.photos.map((p) => (
+                  <li className="sight-item" key={p.id}>
+                    <div className="sight-thumb">
+                      {p.photo_path
+                        ? <CatPhoto path={p.photo_path} kind="gallery" alt={cat.name} loggedIn />
+                        : <span className="sight-thumb-empty" aria-hidden>·</span>}
+                    </div>
+                    <div className="sight-body">
+                      <span className="sight-meta">
+                        {p.reporter ?? (p.reporter_id ? '집사' : COPY.deletedGiver)} · {agoKo(p.created_at)}
+                      </span>
+                      {p.note && <p className="sight-note">{p.note}</p>}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="notice">{COPY.noSightRecord}</p>
+            )}
           </div>
 
           <div className="bottom-bar">
@@ -348,6 +364,15 @@ export default function CatDetailPage({ catId, onClose }) {
                         <img src={sightPreview} alt="목격 사진 미리보기" />
                       </div>
                     )}
+
+                    <textarea
+                      className="dp-sight-note"
+                      value={sightNote}
+                      onChange={(e) => setSightNote(e.target.value.slice(0, 150))}
+                      placeholder={COPY.sightNotePlaceholder}
+                      rows={2}
+                    />
+                    <span className="dp-sight-note-count">{sightNote.length} / 150</span>
 
                     <span className="rf-hint">{COPY.blurNotice}</span>
                     {sightError && (

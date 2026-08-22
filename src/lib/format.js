@@ -54,6 +54,8 @@ export const REPORT_STATUS_KO = { pending: '처리 대기', resolved: '처리 �
 
 export const COPY = {
   noFeedRecord: '아직 기록이 없어요.',
+  noSightRecord: '아직 목격 기록이 없어요.',
+  sightNotePlaceholder: '달라진 점이 있었나요? (선택)',
   feedRecordCaveat:
     '여기 기록이 전부는 아니에요. 기록을 남기지 않고 챙기는 분들도 많아서, 비어 있거나 오래됐다고 굶었다고 볼 수는 없어요.',
   dangerFoods:

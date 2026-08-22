@@ -25,15 +25,15 @@ export async function fetchCatsForMap(loggedIn) {
 
 /**
  * 상세 페이지. 로그인 전용 — 게스트는 RLS 에서 막힌다.
- * "다른 사진들" 갤러리는 사진이 붙은 목격 기록에서 나온다.
+ * "목격 기록" 타임라인은 사진 유무와 무관하게 목격 기록 전체에서 나온다 (§2.13).
  */
 export async function fetchCatDetail(catId) {
   const [cat, photos, feedings] = await Promise.all([
     supabase.from('cats_full').select('*').eq('id', catId).single(),
     supabase.from('sightings')
-      .select('id, photo_path, created_at')
-      .eq('cat_id', catId).not('photo_path', 'is', null)
-      .order('created_at', { ascending: false }).limit(8),
+      .select('id, photo_path, created_at, note, reporter_id')
+      .eq('cat_id', catId)
+      .order('created_at', { ascending: false }).limit(10),
     supabase.from('feedings')
       .select('id, kind, fed_at, giver_id')          // ★ 누가 줬는지 (§2.8-14)
       .eq('cat_id', catId)
@@ -42,20 +42,25 @@ export async function fetchCatDetail(catId) {
 
   if (cat.error) throw cat.error;
   const feeds = feedings.data ?? [];
+  const sights = photos.data ?? [];
 
-  // ★ 밥 준 사람 닉네임을 profiles 에서 채운다.
-  //   로그인 사용자는 모든 profiles 를 읽을 수 있다 (§2.8-14, profiles_select_authed).
-  //   FK 임베드에 기대지 않고 id → nickname 별도 조회로 매핑한다.
-  const giverIds = [...new Set(feeds.map((f) => f.giver_id).filter(Boolean))];
+  // ★ 밥 준 사람 · 목격자 닉네임을 profiles 에서 채운다. 로그인 사용자는 모든 profiles 를
+  //   읽을 수 있다 (§2.8-14, profiles_select_authed). FK 임베드에 기대지 않고
+  //   id → nickname 별도 조회로 매핑한다. 두 출처의 id 를 합쳐 profiles 는 1회만 조회한다.
+  const peopleIds = [...new Set([
+    ...feeds.map((f) => f.giver_id),
+    ...sights.map((s) => s.reporter_id),
+  ].filter(Boolean))];
   let nameById = {};
-  if (giverIds.length) {
+  if (peopleIds.length) {
     const { data: people } = await supabase
-      .from('profiles').select('id, nickname').in('id', giverIds);
+      .from('profiles').select('id, nickname').in('id', peopleIds);
     nameById = Object.fromEntries((people ?? []).map((p) => [p.id, p.nickname]));
   }
   const feedingsWithGiver = feeds.map((f) => ({ ...f, giver: nameById[f.giver_id] ?? null }));
+  const sightsWithReporter = sights.map((s) => ({ ...s, reporter: nameById[s.reporter_id] ?? null }));
 
-  return { ...cat.data, photos: photos.data ?? [], feedings: feedingsWithGiver };
+  return { ...cat.data, photos: sightsWithReporter, feedings: feedingsWithGiver };
 }
 
 /**
