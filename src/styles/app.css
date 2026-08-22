@@ -195,6 +195,8 @@ body{
   border-radius:10px;font-size:15px;margin-bottom:8px}
 .auth-hint{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:10px}
 .auth-msg{font-size:13px;color:var(--muted);margin-top:10px;line-height:1.5}
+.auth-msg-error{color:var(--accent);font-weight:600}
+.auth-msg-inline{margin-top:0;margin-bottom:10px}
 .auth-sep{text-align:center;font-size:12px;color:var(--muted);margin:14px 0 8px}
 .auth-label{display:block;font-size:13px;font-weight:600;color:var(--ink);margin-bottom:4px}
 .btn-primary,.btn-line,.btn-kakao{width:100%;padding:13px;border-radius:10px;
