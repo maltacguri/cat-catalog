@@ -138,12 +138,14 @@ body{
 .dp-feed-backdrop{position:absolute;inset:0;z-index:65;background:rgba(0,0,0,.35);
   display:flex;align-items:flex-end;justify-content:center;padding:16px}
 .dp-feed-sheet{background:var(--token-paper);border-radius:16px;padding:14px;
-  width:100%;max-width:360px;display:flex;gap:10px;
+  width:100%;max-width:360px;display:flex;flex-wrap:wrap;gap:10px;
   box-shadow:0 10px 40px rgba(0,0,0,.25)}
 .dp-feed-opt{flex:1;padding:14px 0;border-radius:10px;border:1px solid rgba(42,42,36,.18);
   background:var(--token-sage);color:var(--token-ink);font-family:var(--token-font-body);
   font-size:15px;font-weight:600;cursor:pointer}
 .dp-feed-opt:active{background:var(--token-deep-green);color:#fff}
+.dp-feed-danger{flex-basis:100%;margin:10px 4px 0;font-family:var(--token-font-body);
+  font-size:12px;line-height:1.6;color:var(--token-ink);opacity:.72}
 
 /* 목격 등록 — "여기서 봤어요" (§2.3, Phase E) */
 .bb-actions{display:flex;gap:8px}

@@ -72,13 +72,14 @@ export default function AuthPanel({ session, onClose }) {
           </button>
 
           <div className="auth-sep">처음이신가요?</div>
+          <button className="btn-kakao" disabled={busy} onClick={() => run(signInWithKakao)}>
+            카카오로 시작하기
+          </button>
           <button className="btn-line" disabled={busy}
                   onClick={() => { setMsg(''); setStep('signup'); }}>
             이메일로 가입하기
           </button>
-          <button className="btn-kakao" disabled={busy} onClick={() => run(signInWithKakao)}>
-            카카오로 시작하기
-          </button>
+    
         </>
       )}
 

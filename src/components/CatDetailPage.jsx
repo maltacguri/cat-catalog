@@ -305,6 +305,7 @@ export default function CatDetailPage({ catId, onClose }) {
                     {KIND_KO[k]}
                   </button>
                 ))}
+                <p className="dp-feed-danger">{COPY.dangerFoods}</p>
               </div>
             </div>
           )}
