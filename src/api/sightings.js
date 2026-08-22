@@ -9,7 +9,7 @@ import { snapToGrid } from '../lib/geo';
  * 방금 넣은 행은 항상 0행으로 돌아온다(§2.3, 비협상). createCat 이 자체 sightings INSERT 에서
  * 같은 이유로 .select() 를 안 붙이는 것과 동일 (api/cats.js). INSERT 성공 여부만 본다.
  */
-export async function addSighting({ catId, lat, lng, photoPath = null }) {
+export async function addSighting({ catId, lat, lng, photoPath = null, note = null }) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('LOGIN_REQUIRED');
 
@@ -20,6 +20,7 @@ export async function addSighting({ catId, lat, lng, photoPath = null }) {
     lng: snapped.lng,
     reporter_id: user.id,
     photo_path: photoPath,
+    note: note?.trim() ? note.trim() : null,
   });
   if (error) throw error;
 }
