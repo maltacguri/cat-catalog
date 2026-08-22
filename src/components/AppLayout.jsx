@@ -18,6 +18,8 @@ export default function AppLayout() {
   const showWelcome = searchParams.has('welcome');
   const { pathname } = useLocation();
   const [profile, setProfile] = useState(null);
+  // 게스트용 "봤음" 플래그 — DB에 안 남기고 이 컴포넌트가 살아있는 동안만 기억한다 (재마운트 시 초기화).
+  const [guestGuideDone, setGuestGuideDone] = useState(false);
 
   useEffect(() => { closeDetail(); }, [pathname]);   // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -27,11 +29,13 @@ export default function AppLayout() {
   }, [session]);
 
   // 오버레이 우선순위 — 한 번에 하나만 뜬다 (1: 서약서 > 2: welcome > 3: 사용법)
+  // 서약서는 로그인 사용자 전용 — 게스트는 프로필 자체가 없어 절대 켜지지 않는다.
   const needPledge = !!session && profile !== null && profile.onboarded_at === null;
   const needWelcome = !needPledge && showWelcome;
-  const needHomeGuide = !needPledge && !needWelcome
-    && !!session && profile !== null && profile.home_guide_seen_at === null
-    && pathname === '/';
+  // 사용법 가이드는 게스트도 본다 — 로그인 사용자는 DB 플래그(profile.home_guide_seen_at),
+  // 게스트는 이 세션 동안의 로컬 state(guestGuideDone)로만 판단한다.
+  const needHomeGuide = !needPledge && !needWelcome && pathname === '/'
+    && (session ? (profile !== null && profile.home_guide_seen_at === null) : !guestGuideDone);
 
   function closeWelcome() {
     const next = new URLSearchParams(searchParams);
@@ -75,7 +79,13 @@ export default function AppLayout() {
 
       {needHomeGuide && (
         <HomeGuideOverlay
-          onDone={() => setProfile((p) => ({ ...p, home_guide_seen_at: new Date().toISOString() }))}
+          onDone={() => {
+            if (session) {
+              setProfile((p) => ({ ...p, home_guide_seen_at: new Date().toISOString() }));
+            } else {
+              setGuestGuideDone(true);
+            }
+          }}
         />
       )}
     </div>
