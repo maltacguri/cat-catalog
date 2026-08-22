@@ -18,6 +18,7 @@ export default function AuthPanel({ session, onClose }) {
   const [pw, setPw] = useState('');
   const [pw2, setPw2] = useState('');
   const [msg, setMsg] = useState('');
+  const [msgTone, setMsgTone] = useState('error'); // 'error' | 'info'
   const [busy, setBusy] = useState(false);
   const [profile, setProfile] = useState(null);
 
@@ -31,8 +32,9 @@ export default function AuthPanel({ session, onClose }) {
     try {
       await fn();
       if (next) setStep(next);
-      if (okMsg) setMsg(okMsg);
+      if (okMsg) { setMsgTone('info'); setMsg(okMsg); }
     } catch (e) {
+      setMsgTone('error');
       setMsg(errorKo(e));
     } finally {
       setBusy(false);
@@ -66,6 +68,11 @@ export default function AuthPanel({ session, onClose }) {
           <label className="auth-label" htmlFor="login-pw">비밀번호</label>
           <input id="login-pw" type="password" value={pw}
                  onChange={(e) => setPw(e.target.value)} />
+          {msg && (
+            <p className={`auth-msg auth-msg-inline${msgTone === 'error' ? ' auth-msg-error' : ''}`}>
+              {msg}
+            </p>
+          )}
           <button className="btn-primary" disabled={busy}
                   onClick={() => run(() => signInWithPassword(email, pw))}>
             로그인
@@ -100,7 +107,7 @@ export default function AuthPanel({ session, onClose }) {
           <button
             className="btn-primary" disabled={busy || !email || pw.length < 6 || !pw2}
             onClick={() => {
-              if (pw !== pw2) { setMsg('비밀번호가 서로 달라요'); return; }
+              if (pw !== pw2) { setMsgTone('error'); setMsg('비밀번호가 서로 달라요'); return; }
               run(() => signUpWithEmail(email, pw), 'sent');
             }}
           >
@@ -130,7 +137,9 @@ export default function AuthPanel({ session, onClose }) {
         </>
       )}
 
-      {msg && <p className="auth-msg">{msg}</p>}
+      {step !== 'login' && msg && (
+        <p className={`auth-msg${msgTone === 'error' ? ' auth-msg-error' : ''}`}>{msg}</p>
+      )}
     </div>
   );
 }
