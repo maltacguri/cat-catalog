@@ -50,4 +50,4 @@ export async function sanitizeImage(file, opts = {}) {
 }
 
 /** 목록용 썸네일 */
-export const makeThumb = (file) => sanitizeImage(file, { maxSide: 480, quality: 0.75 });
+export const makeThumb = (file) => sanitizeImage(file, { maxSide: 960, quality: 0.75 });
