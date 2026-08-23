@@ -279,16 +279,17 @@ export default function CatDetailPage({ catId, onClose }) {
               <ul className="sight-log">
                 {cat.photos.map((p) => (
                   <li className="sight-item" key={p.id}>
-                    <div className="sight-thumb">
-                      {p.photo_path
-                        ? <CatPhoto path={p.photo_path} kind="gallery" alt={cat.name} loggedIn />
-                        : <span className="sight-thumb-empty" aria-hidden>·</span>}
-                    </div>
+                    <div className="sight-time">{agoKo(p.created_at)}</div>
                     <div className="sight-body">
+                      {p.photo_path && (
+                        <div className="sight-photo">
+                          <CatPhoto path={p.photo_path} kind="gallery" alt={cat.name} loggedIn />
+                        </div>
+                      )}
+                      {p.note && <SightNote text={p.note} />}
                       <span className="sight-meta">
-                        {p.reporter ?? (p.reporter_id ? '집사' : COPY.deletedGiver)} · {agoKo(p.created_at)}
+                        {p.reporter ?? (p.reporter_id ? '집사' : COPY.deletedGiver)}
                       </span>
-                      {p.note && <p className="sight-note">{p.note}</p>}
                     </div>
                   </li>
                 ))}
@@ -395,5 +396,25 @@ export default function CatDetailPage({ catId, onClose }) {
         </>
       )}
     </div>
+  );
+}
+
+function SightNote({ text }) {
+  const ref = useRef(null);
+  const [open, setOpen] = useState(false);
+  const [overflow, setOverflow] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (el) setOverflow(el.scrollHeight > el.clientHeight + 1);
+  }, [text]);
+  return (
+    <>
+      <p ref={ref} className={open ? 'sight-note is-open' : 'sight-note'}>{text}</p>
+      {(overflow || open) && (
+        <button type="button" className="sight-more" onClick={() => setOpen(v => !v)}>
+          {open ? '접기' : '더보기'}
+        </button>
+      )}
+    </>
   );
 }
