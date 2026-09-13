@@ -3,7 +3,7 @@
 // 값을 바꾸려면 로드맵 문서를 먼저 고칠 것.
 // ============================================================
 
-export const CAMPUS_SLUG = 'hongik';
+export const CAMPUS_SLUG = 'pusan';
 
 export const POLICY = {
   // §2.4 사진 공개 범위
