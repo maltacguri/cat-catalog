@@ -1,0 +1,16 @@
+/* 브랜드 폰트 @font-face 만 모은 별도 엔트리 (2026-09-14).
+ *
+ * ⚠️ 이걸 main.jsx 에서 import 하면 안 된다. 한국어 폰트는 unicode-range 로 89조각씩
+ * 쪼개져 있어서, 앱 CSS 와 한 파일로 합쳐지면 렌더링 차단 스타일시트가 gzip 208kB 까지
+ * 부푼다 (실측). 그러면 폰트 CDN 커넥션 2개를 없앤 이득을 첫 페인트에서 되돌려준다.
+ *
+ * 그래서 index.html 이 이 파일을 별도 <link> 로 건다. 앱 CSS 와 같은 오리진에서
+ * 병렬로 받고, 앱 CSS 는 10kB 대로 유지된다.
+ *
+ * 굵기는 실제로 쓰는 것만 — Gaegu 700, Gowun Dodum 400.
+ * Gaegu 400 은 넣지 않는다. :root 에 font-synthesis:none 이 걸려 있어도 400 을 요청하면
+ * 브라우저가 가진 것 중 가장 가까운 굵기(=700)를 쓰므로 화면은 그대로다.
+ * 서약서 전용 Nanum Myeongjo 는 PledgeOverlay 가 동적으로 받는다.
+ */
+@import '@fontsource/gaegu/700.css';
+@import '@fontsource/gowun-dodum/400.css';
