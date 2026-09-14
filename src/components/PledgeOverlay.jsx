@@ -44,6 +44,12 @@ export default function PledgeOverlay({ onDone }) {
     fetchMyProfile().then((p) => setNickname(p?.nickname ?? null)).catch((e) => console.error(e));
   }, []);
 
+  // 증서 명조체는 이 화면에서만 쓴다. 가입 직후 1회뿐인 화면 때문에 전원이 받아가지
+  // 않도록 여기서 동적으로 받는다 — 별도 청크로 빠지고, 못 받으면 serif로 폴백된다.
+  useEffect(() => {
+    import('@fontsource/nanum-myeongjo/700.css').catch((e) => console.error(e));
+  }, []);
+
   function handleStamp() {
     if (stamped) return;
     setStamped(true);

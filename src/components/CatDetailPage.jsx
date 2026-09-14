@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Map } from 'react-kakao-maps-sdk';
 import { Bookmark } from 'lucide-react';
 import CatPhoto from './CatPhoto';
+import ConfirmSheet from './ConfirmSheet';
 import { fetchCatDetail, fetchCampus } from '../api/cats';
 import { addFeeding, isTooSoon } from '../api/feedings';
 import { addSighting } from '../api/sightings';
@@ -38,6 +39,10 @@ export default function CatDetailPage({ catId, onClose }) {
   const [saving, setSaving] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+
+  // 과급식 되묻기 — null 이면 안 물어보는 상태. { kind, message } 가 들어오면 시트가 뜬다 (Phase F)
+  const [feedConfirm, setFeedConfirm] = useState(null);
+  const [feedError, setFeedError] = useState(null);   // alert() 를 대신하는 인라인 문구
 
   const [sightOpen, setSightOpen] = useState(false);
   const [sightOpening, setSightOpening] = useState(false);
@@ -107,21 +112,32 @@ export default function CatDetailPage({ catId, onClose }) {
 
     // 과급식 되묻기 (§2.6) — 같은 kind 의 최근 기록만 본다. water 는 건너뛴다.
     // cat.feedings 는 최근 10건(전체 kind 혼합)이라, 그 안에 없으면 "최근 아님"으로 취급한다.
+    //
+    // 네이티브 confirm() 이던 자리 (Phase F). 동기 함수가 아니라 시트라서 흐름이 둘로 갈린다 —
+    // 여기서는 물어볼 내용만 세우고 끝내고, 사용자가 "그래도 기록할게요"를 누르면 doFeed 로 이어진다.
     if (kind !== 'water') {
       const last = cat.feedings.find((f) => f.kind === kind);
-      if (isTooSoon(last?.fed_at)
-        && !confirm(COPY.recentFeedWarn(agoKo(last.fed_at), KIND_KO[kind]))) {
+      if (isTooSoon(last?.fed_at)) {
+        setPickerOpen(false);
+        setFeedConfirm({ kind, message: COPY.recentFeedWarn(agoKo(last.fed_at), KIND_KO[kind]) });
         return;
       }
     }
 
+    await doFeed(kind);
+  }
+
+  /** 되묻기를 통과했거나 물을 필요가 없는 경우의 실제 기록. */
+  async function doFeed(kind) {
+    setFeedConfirm(null);
     setPickerOpen(false);
     setSaving(true);
+    setFeedError(null);
     try {
       await addFeeding(catId, kind);
       setCat(await fetchCatDetail(catId));   // 급식 목록·최근 밥 표시 갱신
     } catch (e) {
-      alert('기록에 실패했어요. 잠시 후 다시 시도해 주세요.');
+      setFeedError('기록에 실패했어요. 잠시 후 다시 시도해 주세요.');
       console.error(e);
     } finally {
       setSaving(false);
@@ -299,6 +315,9 @@ export default function CatDetailPage({ catId, onClose }) {
             )}
           </div>
 
+          {/* alert() 를 대신한다 — 창을 띄우지 않고 버튼 바로 위에 붙는다 */}
+          {feedError && <p className="dp-feed-error" role="alert">{feedError}</p>}
+
           <div className="bottom-bar">
             <div>
               <div className="bb-label">마지막으로 밥 먹은 시간</div>
@@ -313,6 +332,17 @@ export default function CatDetailPage({ catId, onClose }) {
               </button>
             </div>
           </div>
+
+          {/* 과급식 되묻기 (§2.6). 네이티브 confirm() 자리 — Phase F */}
+          {feedConfirm && (
+            <ConfirmSheet
+              message={feedConfirm.message}
+              confirmLabel="그래도 기록할게요"
+              cancelLabel="그만둘래요"
+              onConfirm={() => doFeed(feedConfirm.kind)}
+              onCancel={() => setFeedConfirm(null)}
+            />
+          )}
 
           {pickerOpen && (
             <div className="dp-feed-backdrop" onClick={() => setPickerOpen(false)}>

@@ -42,7 +42,8 @@ export default function BottomBar() {
               <t.Icon size={22} strokeWidth={active ? 2.2 : 1.7} />
               {locked && <Lock className="bb-lock" size={11} strokeWidth={2.6} />}
             </span>
-            <span className="bb-label">{t.label}</span>
+            {/* .bb-label 은 CatDetailPage 하단 바가 먼저 쓰고 있다 — 이름을 나눈다 */}
+            <span className="bb-tab-label">{t.label}</span>
           </button>
         );
       })}

@@ -19,8 +19,10 @@ export default function CatPhoto({ path, kind = 'gallery', alt, className, logge
   );
 }
 
+// 사진 없을 때의 자리. 토큰(--token-cream)을 참조해 다른 면과 같은 크림으로 앉는다.
 const ph = {
   display: 'flex', alignItems: 'center', justifyContent: 'center',
-  background: '#efece4', color: '#a9a396', fontSize: 13,
+  background: 'var(--token-sunken)', color: 'var(--token-muted)', fontSize: 13,
+  fontFamily: 'var(--token-font-body)',
   textAlign: 'center', padding: 12, width: '100%', height: '100%',
 };
