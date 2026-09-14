@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { VitePWA } from 'vite-plugin-pwa'
 
 /**
  * 한국어 웹폰트 @font-face 는 unicode-range 로 89조각씩 쪼개져 있어서, 그냥 두면
@@ -46,9 +47,68 @@ const trimFontCss = {
   },
 }
 
+/**
+ * PWA — 재방문 경로 확보용. 푸시는 아직 미확정이라 넣지 않았다 (로드맵 원칙 1 판정 대기).
+ * 여기서 여는 건 "홈 화면 아이콘"까지다.
+ *
+ * ⚠️ 폰트는 precache 에서 제외한다. 위 trimFontCss 주석대로 한국어 서브셋이 89조각씩이라
+ *    precache manifest 에 넣으면 SW 가 첫 방문에 그걸 전부 내려받는다. 실제로 쓰이는
+ *    조각은 극히 일부다. 대신 runtime CacheFirst 로 "한 번 쓴 조각만" 남긴다.
+ *
+ * ⚠️ Supabase·카카오 응답은 어떤 형태로도 캐시하지 않는다. 목격 1시간 지연은 DB 뷰가
+ *    거는 방어선인데, 응답을 SW 가 들고 있으면 캐시가 그 지연을 우회하게 된다.
+ *    runtimeCaching 에 외부 오리진을 추가하려 할 때 이 줄을 먼저 읽을 것.
+ */
+const pwa = VitePWA({
+  registerType: 'autoUpdate',   // 새 배포를 SW 가 알아서 교체한다. 갱신 안내 UI 는 없다
+  injectRegister: 'auto',
+  includeAssets: ['favicon.svg'],
+  manifest: {
+    name: '어디냐옹',
+    short_name: '어디냐옹',
+    description: '캠퍼스 길고양이 도감',
+    lang: 'ko',
+    start_url: '/',
+    scope: '/',
+    display: 'standalone',
+    background_color: '#FBF7EF',   // paper. index.html 의 theme-color 와 같은 값이어야 한다
+    theme_color: '#FBF7EF',
+    icons: [
+      // TODO 브랜드 아이콘 교체 — 지금 favicon.svg 는 Vite 기본 보라 번개다.
+      // PNG 192/512/maskable 세트가 들어오면 이 배열을 통째로 갈아끼운다.
+      { src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+    ],
+  },
+  workbox: {
+    globPatterns: ['**/*.{js,css,html,svg}'],
+    globIgnores: [
+      '**/assets/fonts/**',       // 위 주석 참고
+      // heic2any 는 gzip 345kB 짜리 지연 청크다. 아이폰 사용자가 HEIC 사진을 올릴 때만
+      // 필요한데, precache 에 두면 첫 방문에서 전원이 이걸 받는다 (전체의 2/3).
+      // 빼면 precache 가 2.0MB → 0.7MB 로 떨어진다. 필요할 때 평소처럼 네트워크로 받는다.
+      '**/heic2any-*.js',
+    ],
+    navigateFallback: '/index.html',       // SPA — 어떤 경로로 들어와도 셸을 준다
+    cleanupOutdatedCaches: true,
+    runtimeCaching: [
+      {
+        // 자체 호스팅 폰트만. 파일명이 패키지 버전으로 고정된 불변 자산이라 CacheFirst 가 안전하다
+        urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/assets/fonts/'),
+        handler: 'CacheFirst',
+        options: {
+          cacheName: 'fonts',
+          expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 365 },
+          cacheableResponse: { statuses: [0, 200] },
+        },
+      },
+    ],
+  },
+  devOptions: { enabled: false },   // dev 에서 SW 가 뜨면 HMR 과 캐시가 서로 꼬인다
+})
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), trimFontCss],
+  plugins: [react(), trimFontCss, pwa],
   server: { port: 5173, strictPort: true },
   build: {
     // 폰트는 절대 base64 로 인라인하지 않는다. 한국어 서브셋은 조각당 3~4kB 라
