@@ -16,17 +16,37 @@
      확정 5색은 "무엇이 무슨 색인가"만 정하고 "면이 어떻게 앉는가"는 정하지 않았다.
      아래가 그 빈칸 — 눌린 면, 경계선, 그림자, 반경, 간격, 이징. */
 
-  /* 면 — 종이(paper)가 기본, cream은 한 단 눌린 자리(입력칸 뒤·빈 슬롯), card는 떠 있는 자리 */
-  --token-cream:#F4EDE0;
+  /* ── 면의 층 (2026-09-14 2차) ─────────────────────────
+     이전엔 지면 paper(L*97.3)에 카드 card(L*99) — 차이 1.7 이라 카드가 안 떴다.
+     지면을 한 단 내려 층을 벌린다. 확정색 paper 의 값은 그대로고, '어디에 쓰는가'만 바뀐다.
+       card   L*99.0  카드·입력칸 (제일 위)
+       paper  L*97.3  시트·바·플로팅 카드 (떠 있는 것)   ← 확정 토큰, 값 불변
+       ground L*93.0  전체 화면 페이지의 지면
+       sunken L*89.5  눌린 자리 (사진 자리·안내문·빈 슬롯)
+       sage   L*88.0  지도 */
   --token-card:#FFFCF6;
+  --token-ground:#F2EADC;
+  --token-sunken:#EAE0CE;
 
-  /* 나를 가리키는 분홍. --token-blush는 확정 마커색, rose는 흰 글씨가 안 올라가는
-     밝기라 '점·테두리·아이콘'에만 쓴다. 버튼 채우기에는 쓰지 않는다. */
+  /* ── 글씨 ──────────────────────────────────────────
+     투명도로 흐리게 만들던 걸 실제 색으로 바꿨다. opacity:.5~.6 은 크림 배경에서
+     대비 3.0~3.9 로 기준(4.5) 미달이었다. 아래 두 색은 ground·card·paper 전부에서 통과한다. */
+  --token-muted:#696256;   /* 보조 — ground 5.05 · card 5.89 */
+  --token-faint:#71695C;   /* 라벨·시각 — ground 4.53 · card 5.29 (sunken 위에서는 muted 를 쓴다) */
+
+  /* 분홍 계열. blush 는 확정 마커색이라 값을 안 바꾼다.
+     rose 는 지도 위 '내 위치' 점이라 비텍스트 3:1 을 넘어야 한다 — 흰바탕 4.34·세이지 3.19.
+     (#E4899A 는 1.85 로 지도에서 점이 안 보였다) */
   --token-blush:#F7ADAD;
-  --token-rose:#E4899A;
+  --token-rose:#C9506A;
+  --token-rose-soft:#F7DDE1;   /* 마이캣 배지 면 */
+  --token-rose-ink:#8E3B4E;    /* 그 위 글씨 — 5.68 */
+
+  /* amber 는 면·테두리·점에만. 글씨로 쓰면 2.67 로 한참 미달이라 짝을 따로 둔다 */
+  --token-amber-text:#865C1D;
 
   /* 오류 문구 전용. amber(주의·필수 표시)와 섞지 않는다 */
-  --token-alert:#A8524B;
+  --token-alert:#9D4C46;
 
   /* 경계선 — 회색(#ebebeb)은 크림 위에서 탁해진다. 잉크를 옅게 깐다 */
   --token-line:rgba(58,42,26,.12);
@@ -67,7 +87,7 @@
   --map-sage:var(--token-sage);
   --paper:var(--token-paper);
   --ink:var(--token-ink);
-  --muted:#7A7263;
+  --muted:var(--token-muted);   /* #7A7263 은 4.45 로 아슬아슬하게 미달이었다 */
   --line:var(--token-line);
   --green:var(--token-deep-green);
   --kakao:#FEE500;
@@ -158,7 +178,7 @@ body{
 .floating-card.show{transform:translateY(0);opacity:1;pointer-events:auto}
 /* .show 뒤에 와야 한다 — 같은 특이도라 순서로 이긴다 */
 .floating-card.show:active{transform:translateY(0) scale(.985)}
-.fc-hero{width:100%;height:170px;background:var(--token-cream);overflow:hidden}
+.fc-hero{width:100%;height:170px;background:var(--token-sunken);overflow:hidden}
 .fc-hero img{width:100%;height:100%;object-fit:cover;display:block}
 .fc-info{padding:16px;color:var(--token-ink);font-family:var(--token-font-body)}
 .fc-title{font-family:var(--token-font-title);font-size:24px;font-weight:700;margin-bottom:6px;
@@ -168,18 +188,18 @@ body{
 .fc-traits{list-style:none;margin-top:10px;font-size:13px;color:var(--muted);line-height:1.5}
 .fc-traits li{display:flex;gap:8px}
 .fc-traits li:before{content:"·";color:var(--token-ink);font-weight:700}
-.fc-traits .more{color:#a9a396}
+.fc-traits .more{color:var(--token-faint)}
 .fc-traits .more:before{content:""}
 
 /* 2단 — 상세 페이지 */
 .detail-page{
-  position:absolute;inset:0;z-index:50;background:var(--paper);
+  position:absolute;inset:0;z-index:50;background:var(--token-ground);
   transform:translateY(100%);opacity:0;pointer-events:none;
   overflow-y:auto;overflow-x:hidden;
   transition:transform .38s var(--token-ease),opacity .2s;
 }
 .detail-page.show{transform:translateY(0);opacity:1;pointer-events:auto}
-.dp-hero{width:100%;height:340px;background:var(--token-cream)}
+.dp-hero{width:100%;height:340px;background:var(--token-sunken)}
 .dp-hero img{width:100%;height:100%;object-fit:cover;display:block}
 /* 원형 오버레이 버튼 2종(뒤로·북마크) — 크림 반투명. 흰색이면 사진 위에서 붕 뜬다 */
 .back-btn{position:absolute;top:calc(20px + env(safe-area-inset-top));left:20px;
@@ -218,9 +238,9 @@ body{
 .traits-list li:before{content:"·";font-weight:700;color:var(--ink)}
 
 .gallery{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.gallery-item{width:100%;aspect-ratio:1;border-radius:var(--token-r-md);background:var(--token-cream);
+.gallery-item{width:100%;aspect-ratio:1;border-radius:var(--token-r-md);background:var(--token-sunken);
   overflow:hidden;display:flex;align-items:center;justify-content:center;
-  color:#b0a894;font-size:13px}
+  color:var(--token-muted);font-size:13px}
 .gallery-item img{width:100%;height:100%;object-fit:cover;display:block}
 
 .sight-log{list-style:none;margin:0;padding:0}
@@ -229,7 +249,7 @@ body{
 .sight-time{
   flex:0 0 44px;width:44px;text-align:right;padding-top:2px;
   font-family:var(--token-font-body);font-size:12px;line-height:1.4;
-  color:var(--token-ink);opacity:.55;
+  color:var(--token-faint);
 }
 .sight-body{flex:1;min-width:0;border-left:1px solid var(--line);padding-left:12px}
 .sight-photo{margin-bottom:8px}
@@ -247,11 +267,11 @@ body{
 .sight-more{
   display:block;background:none;border:0;padding:0;margin:0 0 6px;
   font-family:var(--token-font-body);font-size:12px;
-  color:var(--token-ink);opacity:.55;cursor:pointer;text-decoration:underline;
+  color:var(--token-faint);cursor:pointer;text-decoration:underline;
 }
 .sight-meta{
   display:block;font-family:var(--token-font-body);font-size:12px;
-  color:var(--token-ink);opacity:.6;
+  color:var(--token-faint);
 }
 
 .feed-log{list-style:none;font-size:14px}
@@ -260,7 +280,7 @@ body{
 .feed-log li b{color:var(--ink);font-weight:500}
 
 .notice{font-size:13px;line-height:1.5;color:var(--muted);
-  background:var(--token-cream);border-radius:var(--token-r-md);padding:12px 14px;margin-top:8px}
+  background:var(--token-sunken);border-radius:var(--token-r-md);padding:12px 14px;margin-top:8px}
 
 .bottom-bar{position:sticky;bottom:0;left:0;right:0;z-index:60;background:var(--paper);
   border-top:1px solid var(--line);
@@ -295,12 +315,12 @@ body{
 @keyframes sheet-up{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}
 @keyframes pop-in{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
 .dp-feed-danger{flex-basis:100%;margin:10px 4px 0;font-family:var(--token-font-body);
-  font-size:12px;line-height:1.6;color:var(--token-ink);opacity:.72}
+  font-size:12px;line-height:1.6;color:var(--token-muted)}
 
 /* 기록 실패 문구 — alert() 대신. 하단 바 바로 위에 붙는다 (Phase F) */
 .dp-feed-error{
   position:sticky;bottom:0;z-index:61;margin:0 20px;padding:10px 14px;
-  background:var(--token-cream);border:1px solid var(--token-alert);
+  background:var(--token-sunken);border:1px solid var(--token-alert);
   border-radius:var(--token-r-sm);font-family:var(--token-font-body);
   font-size:13px;line-height:1.5;color:var(--token-alert);text-align:left;
   animation:sheet-up .28s var(--token-ease-spring);
@@ -351,7 +371,7 @@ body{
 .dp-sight-note-count{
   display:block;margin-top:4px;text-align:right;
   font-family:var(--token-font-body);font-size:11px;
-  color:var(--token-ink);opacity:.5;
+  color:var(--token-faint);
 }
 .dp-sight-cancel{flex:1;padding:13px;border-radius:var(--token-r-sm);font-size:15px;font-weight:700;
   cursor:pointer;font-family:inherit;background:var(--token-card);color:var(--token-ink);
@@ -509,7 +529,8 @@ body{
 .homeguide-next:disabled:active{transform:none}
 
 .center-note{position:absolute;inset:0;display:flex;align-items:center;
-  justify-content:center;text-align:center;padding:32px;color:var(--token-ink);opacity:.7;
+  justify-content:center;text-align:center;padding:32px;color:var(--token-ink);
+  /* 세이지(지도) 위라 muted 는 4.43 으로 살짝 모자란다. 어차피 중요한 안내문이다 */
   font-family:var(--token-font-body);font-size:14px;line-height:1.6;background:var(--map-sage)}
 
 
@@ -517,7 +538,7 @@ body{
 
 /* 3단 — 고양이 등록 폼 (§2.10, §2.11) — CatDetailPage와 같은 오버레이 패턴 */
 .register-page{
-  position:absolute;inset:0;z-index:50;background:var(--token-paper);
+  position:absolute;inset:0;z-index:50;background:var(--token-ground);
   transform:translateY(100%);opacity:0;pointer-events:none;
   overflow-y:auto;overflow-x:hidden;
   transition:transform .38s var(--token-ease),opacity .2s;
@@ -528,7 +549,7 @@ body{
   padding:calc(20px + env(safe-area-inset-top)) 20px 16px;
 }
 .rf-back{
-  width:38px;height:38px;border-radius:var(--token-r-full);background:var(--token-cream);border:none;
+  width:38px;height:38px;border-radius:var(--token-r-full);background:var(--token-sunken);border:none;
   font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;
   color:var(--token-ink);flex-shrink:0;transition:transform .16s var(--token-ease);
 }
@@ -562,15 +583,14 @@ body{
 .pf-picker:active{transform:scale(.95)}
 .pf-picker input{display:none}
 .pf-picker.is-busy{opacity:.55;pointer-events:none;cursor:default}
-.pf-filemeta{font-family:var(--token-font-body);font-size:13px;color:var(--token-ink);
-  opacity:.7;word-break:break-all}
+.pf-filemeta{font-family:var(--token-font-body);font-size:13px;color:var(--token-muted);word-break:break-all}
 .pf-error{font-family:var(--token-font-body);font-size:13px;color:var(--token-alert);
   white-space:pre-wrap}
 .pf-preview img{display:block;width:100%;max-width:280px;border-radius:var(--token-r-md)}
 .pf-thumb{display:flex;flex-direction:column;gap:4px}
-.pf-thumb-label{font-family:var(--token-font-body);font-size:12px;color:var(--token-ink);opacity:.6}
+.pf-thumb-label{font-family:var(--token-font-body);font-size:12px;color:var(--token-faint)}
 .pf-thumb img{display:block;width:120px;border-radius:var(--token-r-sm)}
-.pf-upload-status{font-family:var(--token-font-body);font-size:13px;color:var(--token-ink);opacity:.7}
+.pf-upload-status{font-family:var(--token-font-body);font-size:13px;color:var(--token-muted)}
 .pf-upload-done{color:var(--token-deep-green);opacity:1;font-weight:600}
 .pf-upload-done a{color:var(--token-deep-green);text-decoration:underline}
 .pf-upload-error{color:var(--token-alert);opacity:1;white-space:pre-wrap}
@@ -602,16 +622,19 @@ body{
 .bb-tab{
   flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;
   padding:9px 0 7px; background:none; border:none; cursor:pointer;
-  color:var(--token-ink); opacity:.55;          /* .45는 4.5:1 대비에 못 미쳤다 */
+  color:var(--token-faint);          /* .45는 4.5:1 대비에 못 미쳤다 */
   font-family:var(--token-font-body);
   transition:opacity .16s linear, color .16s linear;
 }
 .bb-tab.is-active{ opacity:1; color:var(--token-deep-green); }
-.bb-tab.is-locked{ opacity:.38; }
+/* 잠긴 탭은 비활성이 아니다 — 누르면 로그인 시트가 열린다. 그래서 읽혀야 한다.
+   .38 은 대비 1.9 로 사실상 안 보였다. 상태는 amber 자물쇠 배지가 알린다. */
+.bb-tab.is-locked{ color:var(--token-faint); }
 
 .bb-icon{ position:relative; display:flex; transition:transform .2s var(--token-ease-spring); }
 .bb-tab.is-active .bb-icon{ transform:translateY(-2px) scale(1.08); }
-.bb-lock{ position:absolute; right:-6px; bottom:-2px; color:var(--token-amber); }
+/* 자물쇠는 비텍스트 3:1 대상이다. --token-amber 는 2.99 라 글씨용 짝을 쓴다 */
+.bb-lock{ position:absolute; right:-6px; bottom:-2px; color:var(--token-amber-text); }
 /* ⚠️ 2026-09-14 — 원래 `.bb-label`이었다. CatDetailPage 하단 바의 `.bb-label`
    ("마지막으로 밥 먹은 시간", 13px)과 이름이 겹쳐서, 뒤에 오는 이 규칙이 이겨
    상세 페이지 라벨이 11px/line-height:1 로 찌그러져 있었다. 이름을 갈라 둘 다 제 크기로. */
@@ -627,8 +650,8 @@ body{
 /* 질문 라벨 — 크게 · 볼드 · 제목 폰트(Gaegu) */
 .rf-label{font-family:var(--token-font-title);font-size:23px;font-weight:700;
   color:var(--token-ink);line-height:1.3;letter-spacing:.5px}
-.rf-label .req{color:var(--token-amber);font-style:normal;margin-left:2px}
-.rf-sublabel{font-family:var(--token-font-body);font-size:13px;color:var(--token-ink);opacity:.6}
+.rf-label .req{color:var(--token-amber-text);font-style:normal;margin-left:2px}
+.rf-sublabel{font-family:var(--token-font-body);font-size:13px;color:var(--token-faint)}
 
 .rf-input{font-family:var(--token-font-body);font-size:15px;color:var(--token-ink);
   background:var(--token-card);border:1px solid var(--token-line-strong);border-radius:var(--token-r-sm);
@@ -637,7 +660,7 @@ body{
 .rf-input:focus{outline:none;border-color:var(--token-deep-green);
   box-shadow:0 0 0 3px rgba(58,90,64,.14)}
 .rf-textarea{resize:vertical;line-height:1.5}
-.rf-hint{font-family:var(--token-font-body);font-size:12px;color:var(--token-ink);opacity:.55;
+.rf-hint{font-family:var(--token-font-body);font-size:12px;color:var(--token-faint);
   max-width:300px}
 
 /* 성별 · 중성화 칩 */
@@ -653,15 +676,15 @@ body{
 /* 색 아코디언 */
 .rf-acc{width:min(300px,100%);display:flex;flex-direction:column;gap:0}
 .rf-acc-head{display:flex;align-items:center;justify-content:space-between;
-  font-family:var(--token-font-body);font-size:15px;color:var(--token-ink);opacity:.65;
+  font-family:var(--token-font-body);font-size:15px;color:var(--token-muted);
   background:var(--token-card);border:1px solid var(--token-line-strong);border-radius:var(--token-r-sm);
   padding:12px 14px;cursor:pointer;width:100%}
-.rf-acc-head.picked{opacity:1;font-weight:600}
+.rf-acc-head.picked{color:var(--token-ink);font-weight:600}
 .rf-acc-chev{transition:transform .2s var(--token-ease);flex-shrink:0}
 .rf-acc-chev.open{transform:rotate(180deg)}
 .rf-acc-body{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;
   padding:12px;margin-top:8px;
-  background:var(--token-cream);border:1px solid var(--token-line);border-radius:var(--token-r-md)}
+  background:var(--token-sunken);border:1px solid var(--token-line);border-radius:var(--token-r-md)}
 .rf-acc-item{font-family:var(--token-font-body);font-size:14px;color:var(--token-ink);
   background:var(--token-card);border:1px solid var(--token-line-strong);border-radius:var(--token-r-full);
   padding:9px 17px;cursor:pointer;transition:transform .14s var(--token-ease),background .14s linear}
@@ -682,14 +705,14 @@ body{
 .rf-done-title{font-family:var(--token-font-title);font-size:30px;font-weight:700;
   color:var(--token-deep-green);letter-spacing:.5px}
 .rf-done-msg{font-family:var(--token-font-body);font-size:15px;color:var(--token-ink);max-width:300px}
-.rf-done-sub{font-family:var(--token-font-body);font-size:13px;color:var(--token-ink);opacity:.6;max-width:300px}
+.rf-done-sub{font-family:var(--token-font-body);font-size:13px;color:var(--token-faint);max-width:300px}
 .rf-done .rf-submit{margin-top:14px;max-width:300px}
 
 
 /* ── 주변 고양이 도감 (NearbyPage, §2.7-5 · §3-18) ─────────────── */
 .nearby{
   position:absolute; inset:0; z-index:10; overflow-y:auto; overflow-x:hidden;
-  background:var(--token-paper); color:var(--token-ink);
+  background:var(--token-ground); color:var(--token-ink);
   font-family:var(--token-font-body); padding:16px 16px 90px; /* 하단 = 네비 바 자리 */
 }
 .nearby-head{display:flex;align-items:center;justify-content:space-between;
@@ -703,8 +726,7 @@ body{
 .nearby-register:active{transform:scale(.94)}
 
 /* 몇 마리까지 모았는지 — 도감을 '목록'이 아니라 '모으는 것'으로 읽히게 하는 한 줄 */
-.nearby-count{font-family:var(--token-font-body);font-size:13px;color:var(--token-ink);
-  opacity:.6;margin:0 2px var(--token-sp-3);text-align:left}   /* #root 의 text-align:center 를 끈다 */
+.nearby-count{font-family:var(--token-font-body);font-size:13px;color:var(--token-faint);margin:0 2px var(--token-sp-3);text-align:left}   /* #root 의 text-align:center 를 끈다 */
 .nearby-count b{font-family:var(--token-font-title);font-size:16px;font-weight:700;
   color:var(--token-deep-green);opacity:1}
 
@@ -749,18 +771,20 @@ body{
   transition:transform .18s var(--token-ease),box-shadow .18s linear;
 }
 .nearby-card:active{transform:scale(.97);box-shadow:var(--token-shadow-md)}
-.nearby-thumb{position:relative;width:100%;aspect-ratio:1;overflow:hidden;background:var(--token-cream)}
+.nearby-thumb{position:relative;width:100%;aspect-ratio:1;overflow:hidden;background:var(--token-sunken)}
 .nearby-thumb img{width:100%;height:100%;object-fit:cover;display:block}
 /* 도감번호. 로드맵 §2.11이 "번호에 큰 의미를 두지 않는다"고 해서 작게, 사진 위 구석에만 */
 .nearby-code{position:absolute;left:8px;top:8px;
   font-family:var(--token-font-body);font-size:10px;font-weight:700;letter-spacing:.02em;
-  color:var(--token-deep-green);background:rgba(251,247,239,.90);
+  color:var(--token-faint);background:rgba(251,247,239,.92);
   border-radius:var(--token-r-full);padding:2px 8px}
 .nearby-meta{min-width:0;display:flex;flex-direction:column;gap:2px;padding:10px 12px 12px}
 .nearby-name{font-family:var(--token-font-title);font-size:20px;font-weight:700;line-height:1.2;
   letter-spacing:.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nearby-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
-.nearby-tag{font-size:11px;color:var(--token-deep-green);background:var(--token-sage);
+/* 태그 글씨는 잉크다. deep-green 은 '누르는 것'(버튼·FAB·활성 탭)에만 남긴다 —
+   CTA 와 라벨이 같은 색이면 눌러야 할 것이 안 튄다. 잉크/세이지 대비 10.6. */
+.nearby-tag{font-size:11px;color:var(--token-ink);background:var(--token-sage);
   border-radius:var(--token-r-full);padding:2px 8px;white-space:nowrap}
 .nearby-desc{font-size:12.5px;color:var(--muted);margin-top:4px;line-height:1.45;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -774,7 +798,7 @@ body{
   /* 점선은 또렷해야 '빈 자리'로 읽힌다. 요소 전체에 opacity 를 걸면 테두리까지 흐려져
      실효 알파가 .11 까지 떨어졌다 — 색을 직접 정한다. */
   border:1.5px dashed rgba(58,42,26,.30);
-  background:var(--token-cream);color:var(--muted);cursor:pointer;
+  background:var(--token-sunken);color:var(--muted);cursor:pointer;
   font-family:var(--token-font-body);font-size:12px;padding:8px;
   transition:border-color .16s linear,color .16s linear,transform .16s var(--token-ease);
 }
@@ -788,19 +812,21 @@ body{
 /* ── 마이캣 (MyCatPage, §2.12) ─────────────── */
 .mycat{
   position:absolute; inset:0; overflow-y:auto; overflow-x:hidden;
-  background:var(--token-paper); color:var(--token-ink);
+  background:var(--token-ground); color:var(--token-ink);
   font-family:var(--token-font-body); padding:16px 16px 90px;
 }
 .mycat-head{margin:6px 0 14px}
 .mycat-title{font-family:var(--token-font-title);font-size:27px;font-weight:700;letter-spacing:.5px}
-/* 카드 폭이 ~160px 라 배지 3개가 붙으면 줄바꿈된다. 그래도 읽히게 여백만 줄인다 */
+/* 카드 폭이 ~160px 라 배지 3개가 붙으면 줄바꿈된다. 그래도 읽히게 여백만 줄인다.
+   색은 분홍 계열 — 도감의 세이지 태그(무엇인가)와 마이캣 배지(왜 내 목록에 있는가)를
+   색 온도로 갈라 놓는다. 화면 전체가 베이지·세이지 한 계열이라 이 대비가 필요하다. */
 .mycat-badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
 .mycat-badge{font-family:var(--token-font-body);font-size:10.5px;font-weight:700;
-  color:var(--token-deep-green);background:var(--token-sage);border-radius:var(--token-r-full);
+  color:var(--token-rose-ink);background:var(--token-rose-soft);border-radius:var(--token-r-full);
   padding:3px 8px;white-space:nowrap}
 .mycat-gate{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
   justify-content:center;gap:14px;text-align:center;padding:0 24px;
-  background:var(--token-paper);color:var(--token-ink);font-family:var(--token-font-body)}
+  background:var(--token-ground);color:var(--token-ink);font-family:var(--token-font-body)}
 .mycat-login{display:inline-flex;align-items:center;background:var(--token-deep-green);
   color:var(--token-paper);border:none;border-radius:var(--token-r-full);padding:11px 20px;font-size:14px;
   font-family:var(--token-font-body);font-weight:700;cursor:pointer;
@@ -810,7 +836,7 @@ body{
 /* ── 집사 프로필 (MePage, §2.8-15) ─────────────── */
 .me{
   position:absolute; inset:0; overflow-y:auto; overflow-x:hidden;
-  background:var(--token-paper); color:var(--token-ink);
+  background:var(--token-ground); color:var(--token-ink);
   font-family:var(--token-font-body); padding:48px 20px 90px;
   display:flex; flex-direction:column; align-items:center; gap:24px;
 }
@@ -819,13 +845,13 @@ body{
 .me-count{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;
   background:var(--token-card);border:1px solid var(--token-line);border-radius:var(--token-r-lg);
   padding:18px 8px;box-shadow:var(--token-shadow-sm)}
-.me-count-label{font-size:13px;color:var(--token-ink);opacity:.6}
+.me-count-label{font-size:13px;color:var(--token-faint)}
 .me-count-value{font-family:var(--token-font-title);font-size:26px;font-weight:700;
   color:var(--token-deep-green)}
 .me-error{font-size:13px;color:var(--token-alert)}
 .me-gate{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
   justify-content:center;gap:14px;text-align:center;padding:0 24px;
-  background:var(--token-paper);color:var(--token-ink);font-family:var(--token-font-body)}
+  background:var(--token-ground);color:var(--token-ink);font-family:var(--token-font-body)}
 .me-login{display:inline-flex;align-items:center;background:var(--token-deep-green);
   color:var(--token-paper);border:none;border-radius:var(--token-r-full);padding:11px 20px;font-size:14px;
   font-family:var(--token-font-body);font-weight:700;cursor:pointer;
@@ -835,18 +861,17 @@ body{
 /* 설정 리스트 (§2.10) */
 .me-settings{width:100%;max-width:320px;display:flex;flex-direction:column}
 .me-section{font-family:var(--token-font-body);font-size:12px;font-weight:700;
-  color:var(--token-ink);opacity:.5;letter-spacing:.02em;margin:4px 4px 2px}
+  color:var(--token-faint);letter-spacing:.02em;margin:4px 4px 2px}
 .me-row{display:flex;align-items:center;width:100%;background:none;border:none;
   padding:14px 10px;margin:1px 0;border-radius:var(--token-r-sm);
   font-family:var(--token-font-body);font-size:15px;color:var(--token-ink);
   text-align:left;text-decoration:none;cursor:pointer;transition:background .14s linear}
-.me-row:active{background:var(--token-cream)}
+.me-row:active{background:var(--token-sunken)}
 .me-row-danger{color:var(--token-alert)}
 .me-danger-btn{background:var(--token-alert);color:var(--token-paper);border:none}
-.me-pending{font-family:var(--token-font-body);font-size:14px;color:var(--token-amber);
+.me-pending{font-family:var(--token-font-body);font-size:14px;color:var(--token-amber-text);
   padding:14px 4px}
-.me-version{font-family:var(--token-font-body);font-size:12px;color:var(--token-ink);
-  opacity:.4;padding:14px 4px;text-align:center}
+.me-version{font-family:var(--token-font-body);font-size:12px;color:var(--token-faint);padding:14px 4px;text-align:center}
 
 /* 이용안내 / 개인정보 처리방침 본문 (MeInfoOverlay) */
 .me-info-lead{font-family:var(--token-font-body);font-size:15px;color:var(--token-ink);
@@ -854,8 +879,7 @@ body{
 .me-info-block{margin-bottom:20px}
 .me-info-block-title{font-family:var(--token-font-body);font-size:15px;font-weight:700;
   color:var(--token-ink);margin-bottom:6px}
-.me-info-block-desc{font-family:var(--token-font-body);font-size:14px;color:var(--token-ink);
-  opacity:.7;line-height:1.6}
+.me-info-block-desc{font-family:var(--token-font-body);font-size:14px;color:var(--token-muted);line-height:1.6}
 
   /* ── 등록 확인 단계 (RegisterConfirm, §2.11) ─────────────── */
 .rc-backdrop{position:absolute;inset:0;z-index:70;background:var(--token-scrim);
@@ -878,25 +902,22 @@ body{
 .notice-section:first-child{margin-top:8px}
 .notice-section-title{font-family:var(--token-font-title);font-size:20px;font-weight:700;
   color:var(--token-ink);line-height:1.4;margin-bottom:10px;letter-spacing:.5px}
-.notice-section-body{font-family:var(--token-font-body);font-size:14px;color:var(--token-ink);
-  opacity:.8;line-height:1.7;margin-bottom:10px}
+.notice-section-body{font-family:var(--token-font-body);font-size:14px;color:var(--token-muted);line-height:1.7;margin-bottom:10px}
 .notice-section-body:last-child{margin-bottom:0}
 
   /* ── 고양이 관련 요청 (ReportPanel, §2.16) ─────────────── */
 .report-list{width:100%;margin-top:28px;text-align:left}
 .report-list-title{font-family:var(--token-font-body);font-size:13px;font-weight:700;
-  color:var(--token-ink);opacity:.5;margin-bottom:8px}
-.report-list-empty{font-family:var(--token-font-body);font-size:14px;color:var(--token-ink);
-  opacity:.6}
+  color:var(--token-faint);margin-bottom:8px}
+.report-list-empty{font-family:var(--token-font-body);font-size:14px;color:var(--token-faint)}
 .report-item{padding:10px 0;border-bottom:1px solid var(--token-line)}
 .report-item-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.report-item-date{font-family:var(--token-font-body);font-size:12px;color:var(--token-ink);
-  opacity:.5}
+.report-item-date{font-family:var(--token-font-body);font-size:12px;color:var(--token-faint)}
 .report-item-kind{font-family:var(--token-font-body);font-size:14px;color:var(--token-ink)}
 .report-badge{margin-left:auto;font-family:var(--token-font-body);font-size:12px;font-weight:700;
   border-radius:var(--token-r-full);padding:2px 10px}
 .report-badge-pending{background:var(--token-sage);color:var(--token-ink)}
 .report-badge-resolved{background:var(--token-deep-green);color:var(--token-paper)}
-.report-badge-rejected{background:var(--token-amber);color:var(--token-paper)}
-.report-item-admin{font-family:var(--token-font-body);font-size:13px;color:var(--token-ink);
-  opacity:.7;margin-top:4px}
+/* amber 면 위 흰 글씨는 2.99 다. 글씨용 짝을 면으로 올려 5.5 로 맞춘다 */
+.report-badge-rejected{background:var(--token-amber-text);color:var(--token-paper)}
+.report-item-admin{font-family:var(--token-font-body);font-size:13px;color:var(--token-muted);margin-top:4px}
