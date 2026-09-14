@@ -793,9 +793,11 @@ body{
 }
 .mycat-head{margin:6px 0 14px}
 .mycat-title{font-family:var(--token-font-title);font-size:27px;font-weight:700;letter-spacing:.5px}
-.mycat-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-.mycat-badge{font-family:var(--token-font-body);font-size:11px;font-weight:700;
-  color:var(--token-deep-green);background:var(--token-sage);border-radius:var(--token-r-full);padding:3px 10px}
+/* 카드 폭이 ~160px 라 배지 3개가 붙으면 줄바꿈된다. 그래도 읽히게 여백만 줄인다 */
+.mycat-badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.mycat-badge{font-family:var(--token-font-body);font-size:10.5px;font-weight:700;
+  color:var(--token-deep-green);background:var(--token-sage);border-radius:var(--token-r-full);
+  padding:3px 8px;white-space:nowrap}
 .mycat-gate{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
   justify-content:center;gap:14px;text-align:center;padding:0 24px;
   background:var(--token-paper);color:var(--token-ink);font-family:var(--token-font-body)}

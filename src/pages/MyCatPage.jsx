@@ -1,5 +1,10 @@
 // 마이캣 (§2.12) — 북마크 · 내가 등록 · 밥 준 적 있음, 세 집합을 고양이 하나당 카드 하나로 합친다.
+//
+// 2026-09-14 — 도감(NearbyPage)과 같은 2열 카드 격자를 쓴다. 원래는 `.nearby-list`/`.nearby-item`을
+// 빌려 쓰는 가로 행이었는데, 도감을 격자로 바꾸면서 그 클래스들이 사라져 여기만 깨졌다.
+// 같은 내용(사진·이름·색·성별)이므로 클래스를 빌리는 대신 같은 레이아웃으로 맞춘다.
 import { useEffect, useMemo, useState } from 'react';
+import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { useSession, fetchMyProfile } from '../api/auth';
 import { useAppUI } from '../components/AppUI';
 import { fetchCatsForMap } from '../api/cats';
@@ -19,6 +24,9 @@ export default function MyCatPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all');
+
+  // 필터를 눌러 목록이 바뀔 때 카드가 뚝뚝 갈아끼워지지 않게 한다 (도감과 같다)
+  const [gridRef] = useAutoAnimate();
 
   useEffect(() => {
     if (!loggedIn) { setLoading(false); return; }
@@ -113,24 +121,29 @@ export default function MyCatPage() {
       ) : shown.length === 0 ? (
         <p className="nearby-empty">아직 기록된 고양이가 없어요.</p>
       ) : (
-        <ul className="nearby-list">
+        <ul className="nearby-grid" ref={gridRef}>
           {shown.map((c) => (
-            <li key={c.id} className="nearby-item" onClick={() => openDetail(c.id)}>
-              <div className="nearby-thumb">
-                <CatPhoto path={c.cover_path} kind="cover" alt={c.name} />
-              </div>
-              <div className="nearby-meta">
-                <div className="nearby-name">{c.name}</div>
-                <div className="nearby-tags">
-                  <span>{COLOR_KO[c.color] ?? '기타'}</span>
-                  {c.sex && c.sex !== 'unknown' && <span> · {SEX_KO[c.sex]}</span>}
+            <li key={c.id}>
+              <button type="button" className="nearby-card" onClick={() => openDetail(c.id)}>
+                <div className="nearby-thumb">
+                  <CatPhoto path={c.cover_path} kind="cover" alt={c.name} />
                 </div>
-                <div className="mycat-badges">
-                  {c.isBookmarked && <span className="mycat-badge">북마크</span>}
-                  {c.isMine && <span className="mycat-badge">내가 등록</span>}
-                  {c.hasFed && <span className="mycat-badge">밥 줌</span>}
+                <div className="nearby-meta">
+                  <div className="nearby-name">{c.name}</div>
+                  <div className="nearby-tags">
+                    <span className="nearby-tag">{COLOR_KO[c.color] ?? '기타'}</span>
+                    {c.sex && c.sex !== 'unknown' && (
+                      <span className="nearby-tag">{SEX_KO[c.sex]}</span>
+                    )}
+                  </div>
+                  {/* 왜 내 목록에 있는지 — 세 집합이 겹칠 수 있어 배지가 여러 개 붙는다 */}
+                  <div className="mycat-badges">
+                    {c.isBookmarked && <span className="mycat-badge">북마크</span>}
+                    {c.isMine && <span className="mycat-badge">내가 등록</span>}
+                    {c.hasFed && <span className="mycat-badge">밥 줌</span>}
+                  </div>
                 </div>
-              </div>
+              </button>
             </li>
           ))}
         </ul>
