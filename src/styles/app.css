@@ -873,6 +873,32 @@ body{
   padding:14px 4px}
 .me-version{font-family:var(--token-font-body);font-size:12px;color:var(--token-faint);padding:14px 4px;text-align:center}
 
+/* 홈 화면 추가 카드 (InstallCard) — 집사 페이지 상단 고정.
+   카운터(card)와 같은 층에 앉되 amber 테두리로 '권유'라는 걸 구분한다.
+   amber 는 면·선 전용이라 글씨에는 amber-text 를 쓴다 (토큰 주석 참고). */
+.me .install-card{
+  width:100%;max-width:320px;display:flex;gap:12px;align-items:flex-start;
+  background:var(--token-card);border:1px solid var(--token-amber);
+  border-radius:var(--token-r-lg);padding:16px;box-shadow:var(--token-shadow-sm);
+  font-family:var(--token-font-body);color:var(--token-ink);
+}
+.me .install-card.is-done{border-color:var(--token-line);align-items:center}
+.install-icon{flex:none;color:var(--token-amber-text);margin-top:2px}
+.is-done .install-icon{color:var(--token-deep-green);margin-top:0}
+.install-body{display:flex;flex-direction:column;gap:6px;min-width:0}
+.install-title{font-family:var(--token-font-title);font-size:19px;font-weight:700;
+  letter-spacing:.3px;line-height:1.2}
+.install-desc{font-size:13px;color:var(--token-muted);line-height:1.6}
+.install-steps{margin:2px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:3px;
+  font-size:13px;color:var(--token-muted);line-height:1.6}
+.install-steps b{color:var(--token-ink);font-weight:700}
+.install-btn{align-self:flex-start;margin-top:6px;border:none;cursor:pointer;
+  background:var(--token-deep-green);color:var(--token-paper);
+  border-radius:var(--token-r-full);padding:10px 20px;
+  font-family:var(--token-font-body);font-size:14px;font-weight:700;
+  transition:transform .16s var(--token-ease)}
+.install-btn:active{transform:scale(.95)}
+
 /* 이용안내 / 개인정보 처리방침 본문 (MeInfoOverlay) */
 .me-info-lead{font-family:var(--token-font-body);font-size:15px;color:var(--token-ink);
   line-height:1.6;margin-bottom:24px}
