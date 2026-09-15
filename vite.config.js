@@ -62,7 +62,10 @@ const trimFontCss = {
 const pwa = VitePWA({
   registerType: 'autoUpdate',   // 새 배포를 SW 가 알아서 교체한다. 갱신 안내 UI 는 없다
   injectRegister: 'auto',
-  includeAssets: ['favicon.svg'],
+  includeAssets: ['favicon-96x96.png'],
+  // manifest 아이콘은 precache 에 넣지 않는다. 설치·스플래시 시점에만 쓰이는데
+  // 그때는 어차피 온라인이다. 켜두면 512 PNG 두 장이 앱 셸보다 무거워진다.
+  includeManifestIcons: false,
   manifest: {
     name: '어디냐옹',
     short_name: '어디냐옹',
@@ -74,9 +77,12 @@ const pwa = VitePWA({
     background_color: '#FBF7EF',   // paper. index.html 의 theme-color 와 같은 값이어야 한다
     theme_color: '#FBF7EF',
     icons: [
-      // TODO 브랜드 아이콘 교체 — 지금 favicon.svg 는 Vite 기본 보라 번개다.
-      // PNG 192/512/maskable 세트가 들어오면 이 배열을 통째로 갈아끼운다.
-      { src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+      { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+      // maskable 을 따로 안 뽑고 'any maskable' 로 겸한다. 원화가 이미 가장자리까지
+      // 꽉 찬 구도라 런처가 잘라도 무너지지 않는다. 여백본을 만들면 오히려 고양이 몸이
+      // 잘린 단면이 그대로 드러난다. 별도 파일로 뽑았더니 'any' 판본과 바이트까지
+      // 같아서 (revision 해시 동일) 같은 그림을 두 번 싣는 꼴이었다.
+      { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
     ],
   },
   workbox: {
