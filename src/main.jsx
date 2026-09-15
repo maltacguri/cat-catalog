@@ -11,6 +11,9 @@ import 'open-props/sizes.min.css'
 import 'open-props/easings.min.css'
 
 import './index.css'
+// App 보다 먼저 import 한다 — beforeinstallprompt 는 로드 직후 한 번 발생해서
+// 컴포넌트 useEffect 로는 놓친다. 자세한 건 lib/install.js 맨 위 주석.
+import './lib/install'
 import App from './App.jsx'
 
 createRoot(document.getElementById('root')).render(

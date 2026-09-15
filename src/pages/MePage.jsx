@@ -6,6 +6,7 @@ import { useAppUI } from '../components/AppUI';
 import { fetchMyFeedCounts } from '../api/feedings';
 import { updateNickname } from '../api/profile';
 import { requestDeletion, fetchMyDeletionRequest } from '../api/account';
+import InstallCard from '../components/InstallCard';
 import MeInfoOverlay from '../components/MeInfoOverlay';
 import NoticePanel from '../components/NoticePanel';
 import ReportPanel from '../components/ReportPanel';
@@ -117,6 +118,8 @@ export default function MePage() {
           ))}
         </div>
       )}
+
+      <InstallCard />
 
       <div className="me-settings">
         <div className="me-section">계정</div>
