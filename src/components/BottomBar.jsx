@@ -1,4 +1,4 @@
-// 탭 4개 (앱플로우 §6). 게스트에게도 전부 보이고 3개는 잠금 (§2.2)
+// 탭 4개 (앱플로우 §6). 게스트에게도 전부 보이고 마이캣·집사 2개는 잠금 (§2.2). 주변은 목록까지 게스트 개방
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Home, Search, Bookmark, User, Lock } from 'lucide-react';
 
@@ -8,7 +8,7 @@ import { COPY } from '../lib/format';
 
 const TABS = [
   { to: '/',       label: '홈',     Icon: Home,     auth: false },
-  { to: '/nearby', label: '주변',   Icon: Search,   auth: true  },
+  { to: '/nearby', label: '주변',   Icon: Search,   auth: false },
   { to: '/mycat',  label: '마이캣', Icon: Bookmark, auth: true  },
   { to: '/me',     label: '집사',   Icon: User,     auth: true  },
 ];
