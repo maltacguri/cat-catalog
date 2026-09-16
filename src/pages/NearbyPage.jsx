@@ -6,11 +6,13 @@ import { useSession } from '../api/auth';
 import { useAppUI } from '../components/AppUI';
 import { fetchCatsForMap } from '../api/cats';
 import CatPhoto from '../components/CatPhoto';
-import { COLOR_ORDER, COLOR_KO, SEX_KO } from '../lib/format';
+import { COLOR_ORDER, COLOR_KO, SEX_KO, COPY } from '../lib/format';
 
 /**
- * 주변 고양이 도감 (§2.7-5 · §3-18). 도감 = 이 화면. 로그인 전용(탭이 게스트 잠금).
- * 데이터는 cats_full 전체 행 — 지도와 달리 last_lat 필터 없이 다 나열(위치 지연/없는 애도 목록엔 뜬다).
+ * 주변 고양이 도감 (§2.7-5 · §3-18). 도감 = 이 화면.
+ * 게스트도 목록까지 본다 (§2.2 개정) — 게스트는 cats_guest(성별 없음)라 성별 칩을 숨기고,
+ * 카드 탭(상세)·등록은 로그인 게이트다. ⚠️ 카드에 항목을 추가하는 건 "게스트에게 공개한다"는 뜻이다.
+ * 데이터는 로그인 = cats_full / 게스트 = cats_guest 전체 행 — 지도와 달리 last_lat 필터 없이 다 나열(위치 지연/없는 애도 목록엔 뜬다).
  * 검색축은 3개뿐: 색(다중) · 성별(다중) · 이름 텍스트. (traits 폐기라 이 셋만 남음)
  *
  * 2026-09-14 레이아웃 변경 — 72px 썸네일 세로 리스트에서 2열 카드 격자로.
@@ -63,10 +65,9 @@ export default function NearbyPage() {
   const [gridRef] = useAutoAnimate();
 
   useEffect(() => {
-    if (!loggedIn) { setLoading(false); return; }
     let alive = true;
     setLoading(true); setError(null);
-    fetchCatsForMap(true)
+    fetchCatsForMap(loggedIn)
       .then((rows) => { if (alive) setCats(rows ?? []); })
       .catch((e) => { if (alive) setError(e.message || String(e)); })
       .finally(() => { if (alive) setLoading(false); });
@@ -82,7 +83,14 @@ export default function NearbyPage() {
   }
 
   function goRegister() {
+    if (!loggedIn) { openAuth(COPY.writeLocked); return; }
     navigate('/', { state: { openRegister: true } });
+  }
+
+  // 목록(1단) → 상세(2단)는 로그인 게이트 (§2.2, MapPage와 같은 규칙)
+  function openCard(catId) {
+    if (!loggedIn) { openAuth(COPY.detailLocked); return; }
+    openDetail(catId);
   }
 
   // 아무 필터도 안 고르면 전체. 색·성별은 OR, 이름은 부분일치.
@@ -99,16 +107,6 @@ export default function NearbyPage() {
   const filtering = q.trim() !== '' || colors.size > 0 || sexes.size > 0;
   // 빈 칸은 '아직 안 채워진 도감'을 보여주는 장식이라, 필터 중일 때는 띄우지 않는다.
   const slotCount = filtering ? 0 : Math.max(0, MIN_GRID_CELLS - shown.length);
-
-  // 게스트가 URL로 직접 들어온 경우 방어 (탭은 잠겨 있지만)
-  if (!loggedIn) {
-    return (
-      <div className="nearby nearby-gate">
-        <p>주변 고양이 도감은 로그인해야 볼 수 있어요.</p>
-        <button className="nearby-register" onClick={() => openAuth()}>로그인하기</button>
-      </div>
-    );
-  }
 
   return (
     <div className="nearby">
@@ -146,16 +144,19 @@ export default function NearbyPage() {
         ))}
       </div>
 
-      <div className="nearby-filter">
-        {SEX_FILTERS.map((v) => (
-          <button
-            key={v}
-            className={`nearby-chip ${sexes.has(v) ? 'on' : ''}`}
-            aria-pressed={sexes.has(v)}
-            onClick={() => toggle(setSexes, v)}
-          >{v === 'unknown' ? '성별 모름' : SEX_KO[v]}</button>
-        ))}
-      </div>
+      {/* cats_guest에 sex가 없다 — 게스트에게 보이면 전부 '모름'으로 걸려 결과가 틀린다 */}
+      {loggedIn && (
+        <div className="nearby-filter">
+          {SEX_FILTERS.map((v) => (
+            <button
+              key={v}
+              className={`nearby-chip ${sexes.has(v) ? 'on' : ''}`}
+              aria-pressed={sexes.has(v)}
+              onClick={() => toggle(setSexes, v)}
+            >{v === 'unknown' ? '성별 모름' : SEX_KO[v]}</button>
+          ))}
+        </div>
+      )}
 
       {loading ? (
         <p className="nearby-empty">불러오는 중…</p>
@@ -186,7 +187,7 @@ export default function NearbyPage() {
         <ul className="nearby-grid" ref={gridRef}>
           {shown.map((c) => (
             <li key={c.id}>
-              <button type="button" className="nearby-card" onClick={() => openDetail(c.id)}>
+              <button type="button" className="nearby-card" onClick={() => openCard(c.id)}>
                 <div className="nearby-thumb">
                   <CatPhoto path={c.cover_path} kind="cover" alt={c.name} />
                   {/* 로드맵 §2.11 — "번호에 큰 의미를 두지 않는다". 작게, 구석에만 */}
