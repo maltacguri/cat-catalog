@@ -16,15 +16,54 @@ export function agoKo(iso) {
   return `${Math.floor(d / 7)}주 전`;
 }
 
-/** 목격처럼 뭉개야 하는 시간 — 분 단위로 알려주면 찾아갈 수 있다 */
-export function agoCoarseKo(iso) {
-  if (!iso) return null;
-  const h = (Date.now() - new Date(iso).getTime()) / 3600000;
-  if (h < 24) return '오늘 중';
-  if (h < 48) return '어제쯤';
-  if (h < 24 * 7) return '이번 주';
-  if (h < 24 * 21) return '2~3주 전';
-  return '한참 전';
+// ============================================================
+// §2.19 관측시각(seen_at) — 고양이를 실제로 본 시각. 기록을 남긴 시각(created_at)과 다르다.
+//   ⚠️ 1시간 지연 기준은 created_at 그대로다. seen_at 은 화면 표기에만 쓴다.
+//   여기 있던 agoCoarseKo('오늘 중'·'어제쯤')는 §2.19 가 대체했다 — 호출부가 없어 지웠다.
+// ============================================================
+
+/**
+ * 목격 시각 표기 (§2.19). 포맷은 아래 3개가 전부다 — 올해/작년 같은 분기를 만들지 않는다.
+ *   24시간 이내 → '3시간 전'          (1시간 미만도 '1시간 전'. '방금'을 만들지 않는다)
+ *   7일 이내    → '2일 전'
+ *   그 초과     → '2026. 08. 27.'     (월·일 0패딩, 끝점 포함)
+ *
+ * ⚠️ 적용 지점은 3곳뿐이다 — 지도 카드 · 상세 히어로 · 목격 타임라인. 다른 표기 함수를 섞지 않는다.
+ */
+export function formatSeenAt(ts) {
+  if (!ts) return null;
+  const t = new Date(ts);
+  if (Number.isNaN(t.getTime())) return null;
+  // 클라이언트 시계가 서버보다 느리면 방금 들어온 기록이 미래로 읽힌다 — 음수는 0으로 깎는다.
+  const h = Math.floor(Math.max(0, Date.now() - t.getTime()) / 3600000);
+  if (h < 24) return `${Math.max(1, h)}시간 전`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d}일 전`;
+  const p = (n) => String(n).padStart(2, '0');
+  return `${t.getFullYear()}. ${p(t.getMonth() + 1)}. ${p(t.getDate())}.`;
+}
+
+/**
+ * Date → <input type="datetime-local"> 가 받는 로컬 시각 문자열(YYYY-MM-DDTHH:mm).
+ * toISOString() 을 넣으면 UTC라 한국에서 9시간 밀린 값이 칸에 뜬다.
+ */
+export function toSeenAtInput(d) {
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+/**
+ * 입력칸 값 → DB 로 보낼 ISO 문자열 (§2.19).
+ *   '' (기본값 '지금'에서 손대지 않음) → null. 호출부는 이때 seen_at 키 자체를 빼고,
+ *   DB default now() 가 채운다. 클라이언트에서 now() 를 계산해 넣지 않는 이유다.
+ *   미래 시각은 DB CHECK(seen_at <= created_at) 에 걸리므로 화면에서 먼저 막는다.
+ */
+export function seenAtToIso(value) {
+  if (!value) return null;
+  const t = new Date(value);
+  if (Number.isNaN(t.getTime())) throw new Error(COPY.seenAtInvalid);
+  if (t.getTime() > Date.now()) throw new Error(COPY.seenAtFuture);
+  return t.toISOString();
 }
 
 export const SEX_KO = { male: '수컷', female: '암컷', unknown: '성별 모름' };
@@ -56,6 +95,12 @@ export const COPY = {
   noFeedRecord: '아직 기록이 없어요.',
   noSightRecord: '아직 목격 기록이 없어요.',
   sightNotePlaceholder: '달라진 점이 있었나요? (선택)',
+  // §2.19 관측시각 입력 — 「여기서 봤어요」 시트와 냥이 등록 폼이 같은 문구를 쓴다
+  seenAtLabel: '언제 봤나요?',
+  seenAtFormLabel: '본 시각',
+  seenAtHint: '기본값은 지금이에요. 다른 때 봤다면 바꿔주세요. (선택)',
+  seenAtFuture: '아직 오지 않은 시각은 기록할 수 없어요.',
+  seenAtInvalid: '시각을 다시 확인해 주세요.',
   feedRecordCaveat:
     '여기 기록이 전부는 아니에요. 기록을 남기지 않고 챙기는 분들도 많아서, 비어 있거나 오래됐다고 굶었다고 볼 수는 없어요.',
   dangerFoods:
