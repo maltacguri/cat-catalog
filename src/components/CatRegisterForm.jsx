@@ -2,15 +2,16 @@ import { useEffect, useRef, useState } from 'react';
 import { Map } from 'react-kakao-maps-sdk';
 import { ChevronDown } from 'lucide-react';
 import PhotoField from './PhotoField';
+import SeenAtField from './SeenAtField';
 import { createCat } from '../api/cats';
 import {
-  COLOR_ORDER, COLOR_KO, SEX_KO, NEUTERED_KO, NEUTERED_TO_DB, COPY,
+  COLOR_ORDER, COLOR_KO, SEX_KO, NEUTERED_KO, NEUTERED_TO_DB, seenAtToIso, COPY,
 } from '../lib/format';
 
 /**
  * 3단 — 고양이 등록 폼 (§2.11). CatDetailPage 와 같은 오버레이 패턴, 라우트 없음(§2.10).
  *
- * 입력 순서(번호): 대표사진(맨 위, 번호 없음) → 1.이름 → 2.색 → 3.성별 → 4.중성화 → 5.특이사항 → 6.위치
+ * 입력 순서(번호): 대표사진(맨 위, 번호 없음) → 1.이름 → 2.색 → 3.성별 → 4.중성화 → 5.특이사항 → 6.위치 → 7.본 시각
  * 위치는 폼 안 미니 지도의 "중심 고정 핀"으로 찍는다. 저장 직전 50m 라운딩(§2.3, createCat).
  *
  * props:
@@ -31,6 +32,8 @@ export default function CatRegisterForm({ open, onClose, initialCenter, onCreate
   const [colorOpen, setColorOpen] = useState(false);  // 색 아코디언 열림 여부
   const [sex, setSex] = useState('unknown');
   const [neutered, setNeutered] = useState('unknown');
+  // §2.19 관측시각 — '' 이면 기본값("지금")에서 안 바꿨다는 뜻. 그때는 seen_at 을 보내지 않는다
+  const [seenAt, setSeenAt] = useState('');
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -57,6 +60,7 @@ export default function CatRegisterForm({ open, onClose, initialCenter, onCreate
   function reset() {
     setCoverPath(null); setName(''); setDescription('');
     setColor(null); setColorOpen(false); setSex('unknown'); setNeutered('unknown');
+    setSeenAt('');
     setSubmitting(false); setError(null); setDone(false);
   }
   function close() { reset(); onClose(); }
@@ -72,6 +76,7 @@ export default function CatRegisterForm({ open, onClose, initialCenter, onCreate
         coverPath, name, description, color, sex,
         neutered: NEUTERED_TO_DB[neutered],   // yes/no/unknown → true/false/null
         lat: c.getLat(), lng: c.getLng(),
+        seenAt: seenAtToIso(seenAt),          // §2.19 — 안 바꿨으면 null → 키 자체가 빠진다
       });
       setDone(true);
       onCreated?.();                          // 부모가 fetchCatsForMap 다시 호출
@@ -201,6 +206,18 @@ export default function CatRegisterForm({ open, onClose, initialCenter, onCreate
               </div>
               <span className="rf-hint">{COPY.blurNotice}</span>
             </div>
+
+            {/* 7. 본 시각 (§2.19) — 선택. 「여기서 봤어요」 시트와 같은 컴포넌트를 쓴다 */}
+            <label className="rf-field">
+              <span className="rf-label">7. {COPY.seenAtFormLabel}</span>
+              <span className="rf-sublabel">{COPY.seenAtHint}</span>
+              <SeenAtField
+                open={open}
+                value={seenAt}
+                onChange={setSeenAt}
+                className="rf-input"
+              />
+            </label>
 
             {error && (
               <div className="pf-upload-status pf-upload-error">등록 실패: {error}</div>

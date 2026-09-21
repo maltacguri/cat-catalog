@@ -3,7 +3,8 @@ import { Map } from 'react-kakao-maps-sdk';
 import { Bookmark } from 'lucide-react';
 import CatPhoto from './CatPhoto';
 import ConfirmSheet from './ConfirmSheet';
-import { fetchCatDetail, fetchCampus } from '../api/cats';
+import SeenAtField from './SeenAtField';
+import { fetchCatDetail, fetchCatSightings, fetchCampus, SIGHT_PAGE } from '../api/cats';
 import { addFeeding, isTooSoon } from '../api/feedings';
 import { addSighting } from '../api/sightings';
 import { uploadSightingPhoto } from '../api/photos';
@@ -11,7 +12,7 @@ import { sanitizeImage } from '../lib/image';
 import { toggleBookmark, isBookmarked } from '../api/bookmarks';
 import { useSession } from '../api/auth';
 import { useAppUI } from './AppUI';
-import { agoKo, agoCoarseKo, SEX_KO, KIND_KO, KIND_ORDER, COPY } from '../lib/format';
+import { agoKo, formatSeenAt, seenAtToIso, SEX_KO, KIND_KO, KIND_ORDER, COPY } from '../lib/format';
 
 // 브라우저 현재 위치를 1회 조회한다. 미지원·권한 거부·타임아웃이면 null을 resolve한다(throw 없음).
 // maximumAge 60000 — MapPage 마운트 때 받아둔 좌표가 캐시에 남아 있으면 즉시 반환된다.
@@ -53,10 +54,18 @@ export default function CatDetailPage({ catId, onClose }) {
   const sightMapRef = useRef(null);   // 제출 시점에 지도 중심을 읽는다 (CatRegisterForm 과 같은 패턴)
 
   const [sightNote, setSightNote] = useState('');
+  // §2.19 관측시각 — '' 이면 기본값("지금")에서 손대지 않았다는 뜻이고, 그때는 seen_at 을 안 보낸다
+  const [sightSeenAt, setSightSeenAt] = useState('');
   const [sightFile, setSightFile] = useState(null);
   const [sightPreview, setSightPreview] = useState(null);
   const [sightPhotoBusy, setSightPhotoBusy] = useState(false);
   const [sightPhotoError, setSightPhotoError] = useState(null);
+
+  // 목격 타임라인 (§2.13 최근 10건 컷 + §2.19 「더보기」). cat 과 따로 두는 이유는
+  // 밥 기록 갱신(doFeed)이 펼쳐둔 타임라인을 접어버리지 않게 하려는 것이다.
+  const [sights, setSights] = useState([]);
+  const [sightsMore, setSightsMore] = useState(false);      // 다음 페이지가 있을 수 있음
+  const [sightsLoading, setSightsLoading] = useState(false);
 
   // 미리보기 URL은 다음 파일로 교체되거나 시트가 닫힐 때 해제한다 (PhotoField.jsx와 같은 패턴)
   useEffect(() => () => {
@@ -67,11 +76,38 @@ export default function CatDetailPage({ catId, onClose }) {
     setCat(null);
     setPickerOpen(false);
     setSightOpen(false);
+    setSights([]);
+    setSightsMore(false);
     if (!catId) return;
     let alive = true;
-    fetchCatDetail(catId).then((d) => alive && setCat(d)).catch(console.error);
+    fetchCatDetail(catId).then((d) => {
+      if (!alive) return;
+      setCat(d);
+      applySights(d.photos);
+    }).catch(console.error);
     return () => { alive = false; };
   }, [catId]);
+
+  // 타임라인 첫 페이지. 10건이 꽉 찼으면 다음 페이지가 있을 수 있다는 뜻이다.
+  function applySights(rows) {
+    setSights(rows);
+    setSightsMore(rows.length === SIGHT_PAGE);
+  }
+
+  // 「더보기」 — .range() 로 다음 10건을 이어 붙인다. 섹션을 새로 만들지 않는다 (§2.13).
+  async function loadMoreSights() {
+    if (sightsLoading) return;
+    setSightsLoading(true);
+    try {
+      const more = await fetchCatSightings(catId, sights.length);
+      setSights((prev) => [...prev, ...more]);
+      setSightsMore(more.length === SIGHT_PAGE);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSightsLoading(false);
+    }
+  }
 
   // 북마크 초기 상태 (§2.12) — 상세 페이지가 자립형으로 유지되도록 별도 effect로 분리
   useEffect(() => {
@@ -136,6 +172,7 @@ export default function CatDetailPage({ catId, onClose }) {
     try {
       await addFeeding(catId, kind);
       setCat(await fetchCatDetail(catId));   // 급식 목록·최근 밥 표시 갱신
+      // ★ 목격 타임라인(sights)은 일부러 그대로 둔다 — 「더보기」로 펼쳐둔 목록이 접히지 않게.
     } catch (e) {
       setFeedError('기록에 실패했어요. 잠시 후 다시 시도해 주세요.');
       console.error(e);
@@ -181,6 +218,7 @@ export default function CatDetailPage({ catId, onClose }) {
     setSightPhotoBusy(false);
     setSightPhotoError(null);
     setSightNote('');
+    setSightSeenAt('');
   }
 
   // 목격 사진은 이 시점에 업로드하지 않는다 — 미리보기만 만들고, 실제 업로드는 제출 시(submitSighting)
@@ -208,18 +246,27 @@ export default function CatDetailPage({ catId, onClose }) {
     const c = sightMapRef.current?.getCenter();
     if (!c) { setSightError('지도를 불러오는 중이에요. 잠시 후 다시 시도해 주세요.'); return; }
 
+    // §2.19 — 시각을 바꿨을 때만 ISO 로 바꿔 넘긴다. 안 바꿨으면 null 이라 키 자체가 빠진다.
+    let seenAt = null;
+    try {
+      seenAt = seenAtToIso(sightSeenAt);
+    } catch (e) {
+      setSightError(e.message || String(e));
+      return;
+    }
+
     setSightSaving(true);
     setSightError(null);
     try {
       let photoPath = null;
       if (sightFile) photoPath = (await uploadSightingPhoto(sightFile, { catId })).path;
-      await addSighting({ catId, lat: c.getLat(), lng: c.getLng(), photoPath, note: sightNote });
+      await addSighting({ catId, lat: c.getLat(), lng: c.getLng(), photoPath, note: sightNote, seenAt });
       setSightDone(true);
       // ★ 목격의 좌표·시간 표시는 일부러 다시 안 맞춘다 — cats_full 은 security_invoker 가 꺼져 있어
       //   재조회해도 1시간 지연이 뷰 단에서 그대로 유지된다(§2.3, 비협상). 여기서 재조회하는 건
       //   방금 남긴 목격을 "목격 기록" 타임라인에 바로 반영하기 위해서일 뿐이다 — 본인 행은
       //   sightings SELECT 정책의 reporter_id = auth.uid() 예외로 지연 없이 바로 보인다(§2.13).
-      const d = await fetchCatDetail(catId); setCat(d);
+      const d = await fetchCatDetail(catId); setCat(d); applySights(d.photos);
     } catch (e) {
       setSightError(e.message || String(e));
     } finally {
@@ -253,8 +300,9 @@ export default function CatDetailPage({ catId, onClose }) {
               {cat.code && ` · 도감 No.${cat.code}`}
             </div>
             <div className="dp-meta">
+              {/* §2.19 — last_sighted_at 은 뷰에서 seen_at 기준으로 온다 */}
               {cat.last_sighted_at
-                ? `${agoCoarseKo(cat.last_sighted_at)} 목격 · 지도에서 대략 위치 확인`
+                ? `${formatSeenAt(cat.last_sighted_at)} 목격 · 지도에서 대략 위치 확인`
                 : '최근 목격 기록 없음'}
             </div>
             <p className="notice">{COPY.blurNotice}</p>
@@ -291,11 +339,12 @@ export default function CatDetailPage({ catId, onClose }) {
             <div className="divider" />
 
             <div className="section-title">목격 기록</div>
-            {cat.photos.length > 0 ? (
+            {sights.length > 0 ? (
               <ul className="sight-log">
-                {cat.photos.map((p) => (
+                {sights.map((p) => (
                   <li className="sight-item" key={p.id}>
-                    <div className="sight-time">{agoKo(p.created_at)}</div>
+                    {/* §2.19 — 기록 시각(created_at)이 아니라 관측 시각(seen_at)을 보여준다 */}
+                    <div className="sight-time">{formatSeenAt(p.seen_at)}</div>
                     <div className="sight-body">
                       {p.photo_path && (
                         <div className="sight-photo">
@@ -312,6 +361,14 @@ export default function CatDetailPage({ catId, onClose }) {
               </ul>
             ) : (
               <p className="notice">{COPY.noSightRecord}</p>
+            )}
+            {sightsMore && (
+              <button
+                type="button" className="sight-page-more"
+                onClick={loadMoreSights} disabled={sightsLoading}
+              >
+                {sightsLoading ? '불러오는 중…' : '더보기'}
+              </button>
             )}
           </div>
 
@@ -379,6 +436,18 @@ export default function CatDetailPage({ catId, onClose }) {
                       <div className="rf-pin" aria-hidden>📍</div>
                     </div>
                     <span className="rf-hint">지도를 움직여 고양이를 본 곳에 핀을 맞춰주세요</span>
+
+                    {/* §2.19 관측시각 — 선택 항목. 안 바꾸면 seen_at 을 보내지 않는다 */}
+                    <label className="dp-sight-when">
+                      <span className="dp-sight-when-label">{COPY.seenAtLabel}</span>
+                      <SeenAtField
+                        open={sightOpen}
+                        value={sightSeenAt}
+                        onChange={setSightSeenAt}
+                        className="dp-sight-when-input"
+                      />
+                      <span className="rf-hint">{COPY.seenAtHint}</span>
+                    </label>
 
                     <label className={`dp-sight-photo-picker ${sightPhotoBusy ? 'is-busy' : ''}`}>
                       <input
