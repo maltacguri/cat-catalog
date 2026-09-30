@@ -318,11 +318,14 @@ body{
 .dp-feed-sheet{background:var(--token-paper);border-radius:var(--token-r-lg);padding:14px;
   width:100%;max-width:360px;display:flex;flex-wrap:wrap;gap:10px;
   box-shadow:var(--token-shadow-lg);animation:sheet-up .34s var(--token-ease-spring)}
-.dp-feed-opt{flex:1;padding:14px 0;border-radius:var(--token-r-sm);border:1px solid var(--token-line-strong);
+.dp-feed-opt{flex:1;padding:12px 0 10px;border-radius:var(--token-r-sm);border:1px solid var(--token-line-strong);
   background:var(--token-sage);color:var(--token-ink);font-family:var(--token-font-body);
   font-size:15px;font-weight:600;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
   transition:transform .14s var(--token-ease),background .14s linear}
 .dp-feed-opt:active{background:var(--token-deep-green);color:var(--token-paper);transform:scale(.95)}
+/* 3종 그림 — 원화가 전부 높이 45 기준이라 높이만 고정하고 폭은 비율대로 둔다 */
+.dp-feed-icon{display:block;height:40px;width:auto;pointer-events:none}
 
 @keyframes scrim-in{from{opacity:0}to{opacity:1}}
 @keyframes sheet-up{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}

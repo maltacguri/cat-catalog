@@ -13,6 +13,14 @@ import { toggleBookmark, isBookmarked } from '../api/bookmarks';
 import { useSession } from '../api/auth';
 import { useAppUI } from './AppUI';
 import { agoKo, formatSeenAt, seenAtToIso, SEX_KO, KIND_KO, KIND_ORDER, COPY } from '../lib/format';
+import feedIcon from '../assets/icon-feed-fill.png';
+import treatIcon from '../assets/icon-treat-fill.png';
+import waterIcon from '../assets/icon-water-fill.png';
+
+// 밥 주기 3종 선택 시트의 그림. 키는 feedings.kind 슬러그(KIND_ORDER)와 같다.
+// 원본은 Figma SVG(PNG 내장)였는데 3배 PNG 로 뽑아 넣었다 — SVG 로 두면 PWA precache
+// (globPatterns 에 svg 포함)에 156kB 가 얹히고, png 는 시트를 처음 열 때만 받는다.
+const KIND_ICON = { food: feedIcon, treat: treatIcon, water: waterIcon };
 
 // 브라우저 현재 위치를 1회 조회한다. 미지원·권한 거부·타임아웃이면 null을 resolve한다(throw 없음).
 // maximumAge 60000 — MapPage 마운트 때 받아둔 좌표가 캐시에 남아 있으면 즉시 반환된다.
@@ -406,6 +414,8 @@ export default function CatDetailPage({ catId, onClose }) {
               <div className="dp-feed-sheet" onClick={(e) => e.stopPropagation()}>
                 {KIND_ORDER.map((k) => (
                   <button key={k} className="dp-feed-opt" onClick={() => handleFeed(k)}>
+                    {/* 라벨이 버튼 이름을 맡으므로 그림은 장식 — alt 를 비운다 */}
+                    <img className="dp-feed-icon" src={KIND_ICON[k]} alt="" aria-hidden />
                     {KIND_KO[k]}
                   </button>
                 ))}
