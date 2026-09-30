@@ -744,8 +744,13 @@ body{
   font-family:var(--token-font-body); padding:16px 16px 90px; /* 하단 = 네비 바 자리 */
 }
 .nearby-head{display:flex;align-items:center;justify-content:space-between;
-  gap:var(--token-sp-2);margin:6px 0 var(--token-sp-1)}
-.nearby-title{font-family:var(--token-font-title);font-size:27px;font-weight:700;letter-spacing:.5px}
+  gap:var(--token-sp-2);margin:var(--token-sp-5) 0 var(--token-sp-1)}
+/* h1 전역 여백(index.css, 20~32px)이 제목과 아래 줄 사이를 벌리고 있었다 — 여기서 0으로 덮고
+   위아래 여백은 .nearby-head 가 맡는다. 뷰포트가 아니라 폰 프레임 기준이라 모바일·데스크톱이 같다.
+   크기는 폭 따라 27~32px — 32px 고정이면 360px 폰에서 「새로 등록하기」와 한 줄에 못 들어가 두 줄로 꺾인다.
+   (.phone 은 폰에서 100vw, 데스크톱에서 420px 라 데스크톱은 항상 상한 32px) */
+.nearby-title{font-family:var(--token-font-title);font-size:clamp(27px,8vw,32px);font-weight:700;letter-spacing:.5px;
+  line-height:1.2;margin:0}
 /* 프로토타입 색(#e51d53)을 쓰고 있었다. 등록 흐름은 전부 deep-green이라 여기도 맞춘다 */
 .nearby-register{display:inline-flex;align-items:center;gap:4px;background:var(--token-deep-green);
   color:var(--token-paper);border:none;border-radius:var(--token-r-full);padding:9px 15px;
@@ -762,6 +767,8 @@ body{
   border:1px solid var(--token-line-strong);border-radius:var(--token-r-full);
   padding:11px 16px;margin-bottom:10px;color:var(--muted);
   transition:border-color .16s linear,box-shadow .16s linear}
+/* 마릿수 줄이 없을 때(불러오는 중·0마리·실패) 검색창이 제목에 4px로 붙지 않게 */
+.nearby-head + .nearby-search{margin-top:var(--token-sp-3)}
 .nearby-search:focus-within{border-color:var(--token-deep-green);
   box-shadow:0 0 0 3px rgba(58,90,64,.14)}
 .nearby-search input{flex:1;border:none;outline:none;background:transparent;

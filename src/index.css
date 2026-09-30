@@ -34,7 +34,8 @@
 
 /* <h1>은 NearbyPage·MyCatPage 제목 2곳.
    .nearby-title / .mycat-title이 font-family·size·weight·자간을 덮으므로
-   여백·색은 여기가 정본이다. (자간 -1.68px은 Gaegu에서 글자가 붙어버려 제목 쪽으로 넘겼다) */
+   여백·색은 여기가 정본이다. 단 .nearby-title 은 margin 을 0으로 덮는다(.nearby-head 가 여백을 맡음).
+   (자간 -1.68px은 Gaegu에서 글자가 붙어버려 제목 쪽으로 넘겼다) */
 h1 {
   margin: 32px 0;
   color: #2A2A24;
