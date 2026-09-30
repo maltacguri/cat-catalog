@@ -198,9 +198,12 @@ body{
 .detail-page{
   position:absolute;inset:0;z-index:50;background:var(--token-ground);
   transform:translateY(100%);opacity:0;pointer-events:none;
-  overflow-y:auto;overflow-x:hidden;
+  /* 스크롤은 .dp-scroll 이 한다. 여기가 스크롤되면 absolute 시트가 스크롤 내용 맨 위에 붙어
+     내려서 열었을 때 화면 가운데에 뜬다. clip 인 이유는 .phone 주석과 같다 */
+  overflow:clip;
   transition:transform .38s var(--token-ease),opacity .2s;
 }
+.dp-scroll{height:100%;overflow-y:auto;overflow-x:hidden}
 .detail-page.show{transform:translateY(0);opacity:1;pointer-events:auto}
 .dp-hero{width:100%;height:340px;background:var(--token-sunken)}
 .dp-hero img{width:100%;height:100%;object-fit:cover;display:block}
@@ -297,7 +300,8 @@ body{
 
 .bottom-bar{position:sticky;bottom:0;left:0;right:0;z-index:60;background:var(--paper);
   border-top:1px solid var(--line);
-  padding:14px 20px calc(14px + env(safe-area-inset-bottom));
+  /* 아랫여백 = 14px 과 홈 인디케이터 영역 중 큰 쪽. 둘을 더하면(14+34px) 아이폰에서 버튼이 붕 떠 보였다 */
+  padding:14px 20px max(14px, env(safe-area-inset-bottom));
   display:flex;justify-content:space-between;align-items:center;gap:12px}
 .bb-label{font-size:13px;color:var(--muted)}
 .bb-value{font-size:15px;font-weight:700}

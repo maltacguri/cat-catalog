@@ -5,7 +5,9 @@
 :root {
   font: 18px/145% system-ui, 'Segoe UI', Roboto, sans-serif;
   letter-spacing: 0.18px;
-  background: #E6DAC6;              /* body 그라데이션이 덮기 전 한 프레임의 색 — 흰색이면 번쩍인다 */
+  /* body 그라데이션이 덮기 전 한 프레임의 색 — 흰색이면 번쩍인다.
+     아이폰은 상단 상태바(시계) 뒤도 이 색으로 칠한다. 화면 바탕(ground)과 다르면 경계가 보여서 맞춘다 */
+  background: var(--token-ground);
   color-scheme: light;              /* 다크모드 미지원을 명시 — 폼 요소를 항상 밝게 */
   font-synthesis: none;             /* Gowun Dodum이 400 한 굵기라 가짜 볼드 방지 */
   text-rendering: optimizeLegibility;
