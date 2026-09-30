@@ -284,120 +284,129 @@ export default function CatDetailPage({ catId, onClose }) {
 
   return (
     <div className={`detail-page ${catId ? 'show' : ''}`}>
-      <button className="back-btn" onClick={onClose} aria-label="닫기">←</button>
-      <button
-        className={`dp-bookmark-btn ${bookmarked ? 'is-on' : ''}`}
-        onClick={handleBookmarkToggle}
-        aria-label={bookmarked ? '북마크 해제' : '북마크'}
-      >
-        <Bookmark size={18} fill={bookmarked ? 'currentColor' : 'none'} />
-      </button>
+      {/* 스크롤은 안쪽 .dp-scroll 이 맡는다. .detail-page 자체가 스크롤되면 그 안의 absolute
+          시트(밥 주기·여기서 봤어요·과급식 되묻기)가 화면이 아니라 스크롤 내용 맨 위에 붙어서,
+          내려서 연 경우 스크림이 중간에서 끊기고 시트가 화면 가운데에 뜬다. 시트는 스크롤 밖 형제로 둔다. */}
+      <div className="dp-scroll">
+        <button className="back-btn" onClick={onClose} aria-label="닫기">←</button>
+        <button
+          className={`dp-bookmark-btn ${bookmarked ? 'is-on' : ''}`}
+          onClick={handleBookmarkToggle}
+          aria-label={bookmarked ? '북마크 해제' : '북마크'}
+        >
+          <Bookmark size={18} fill={bookmarked ? 'currentColor' : 'none'} />
+        </button>
+
+        {cat && (
+          <>
+            <div className="dp-hero">
+              <CatPhoto path={cat.cover_path} kind="cover" alt={cat.name} />
+            </div>
+
+            <div className="dp-body">
+              <div className="dp-title">{cat.name}</div>
+              <div className="dp-subtitle">
+                {SEX_KO[cat.sex]}
+                {cat.neutered === true && ' · 중성화 완료'}
+                {cat.neutered === false && ' · 중성화 확인 필요'}
+                {cat.code && ` · 도감 No.${cat.code}`}
+              </div>
+              <div className="dp-meta">
+                {/* §2.19 — last_sighted_at 은 뷰에서 seen_at 기준으로 온다 */}
+                {cat.last_sighted_at
+                  ? `${formatSeenAt(cat.last_sighted_at)} 목격 · 지도에서 대략 위치 확인`
+                  : '최근 목격 기록 없음'}
+              </div>
+              <p className="notice">{COPY.blurNotice}</p>
+
+              <div className="divider" />
+
+              {/* ★ traits(폐기) 섹션 제거 → description 을 "특이사항"으로 보여준다 (§2.11) */}
+              <div className="section-title">특이사항</div>
+              {cat.description
+                ? <p className="dp-desc">{cat.description}</p>
+                : <p className="notice">아직 등록된 특이사항이 없어요.</p>}
+
+              <div className="divider" />
+
+              <div className="section-title">밥 기록</div>
+              {cat.feedings.length > 0 ? (
+                <ul className="feed-log">
+                  {cat.feedings.map((f) => (
+                    <li key={f.id}>
+                      <b>{KIND_KO[f.kind]}</b>
+                      {/* ★ 누가 줬는지 (§2.8-14). giver_id가 없으면 탈퇴로 CASCADE된 것 —
+                          일반 폴백('집사')과 구분해 보여준다. */}
+                      <span>
+                        {f.giver ?? (f.giver_id ? '집사' : COPY.deletedGiver)} · {agoKo(f.fed_at)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="notice">{COPY.noFeedRecord}</p>
+              )}
+              <p className="notice">{COPY.feedRecordCaveat}</p>
+
+              <div className="divider" />
+
+              <div className="section-title">목격 기록</div>
+              {sights.length > 0 ? (
+                <ul className="sight-log">
+                  {sights.map((p) => (
+                    <li className="sight-item" key={p.id}>
+                      {/* §2.19 — 기록 시각(created_at)이 아니라 관측 시각(seen_at)을 보여준다 */}
+                      <div className="sight-time">{formatSeenAt(p.seen_at)}</div>
+                      <div className="sight-body">
+                        {p.photo_path && (
+                          <div className="sight-photo">
+                            <CatPhoto path={p.photo_path} kind="gallery" alt={cat.name} loggedIn />
+                          </div>
+                        )}
+                        {p.note && <SightNote text={p.note} />}
+                        <span className="sight-meta">
+                          {p.reporter ?? (p.reporter_id ? '집사' : COPY.deletedGiver)}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="notice">{COPY.noSightRecord}</p>
+              )}
+              {sightsMore && (
+                <button
+                  type="button" className="sight-page-more"
+                  onClick={loadMoreSights} disabled={sightsLoading}
+                >
+                  {sightsLoading ? '불러오는 중…' : '더보기'}
+                </button>
+              )}
+            </div>
+
+            {/* alert() 를 대신한다 — 창을 띄우지 않고 버튼 바로 위에 붙는다 */}
+            {feedError && <p className="dp-feed-error" role="alert">{feedError}</p>}
+
+            <div className="bottom-bar">
+              <div>
+                <div className="bb-label">마지막으로 밥 먹은 시간</div>
+                <div className="bb-value">{agoKo(cat.last_fed_at) ?? '기록 없음'}</div>
+              </div>
+              <div className="bb-actions">
+                <button className="bb-btn bb-btn-line" onClick={openSightMap} disabled={sightOpening}>
+                  {sightOpening ? '위치 확인 중…' : '여기서 봤어요'}
+                </button>
+                <button className="bb-btn" onClick={openPicker} disabled={saving}>
+                  {saving ? '기록 중…' : '밥 주기'}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
 
       {cat && (
         <>
-          <div className="dp-hero">
-            <CatPhoto path={cat.cover_path} kind="cover" alt={cat.name} />
-          </div>
-
-          <div className="dp-body">
-            <div className="dp-title">{cat.name}</div>
-            <div className="dp-subtitle">
-              {SEX_KO[cat.sex]}
-              {cat.neutered === true && ' · 중성화 완료'}
-              {cat.neutered === false && ' · 중성화 확인 필요'}
-              {cat.code && ` · 도감 No.${cat.code}`}
-            </div>
-            <div className="dp-meta">
-              {/* §2.19 — last_sighted_at 은 뷰에서 seen_at 기준으로 온다 */}
-              {cat.last_sighted_at
-                ? `${formatSeenAt(cat.last_sighted_at)} 목격 · 지도에서 대략 위치 확인`
-                : '최근 목격 기록 없음'}
-            </div>
-            <p className="notice">{COPY.blurNotice}</p>
-
-            <div className="divider" />
-
-            {/* ★ traits(폐기) 섹션 제거 → description 을 "특이사항"으로 보여준다 (§2.11) */}
-            <div className="section-title">특이사항</div>
-            {cat.description
-              ? <p className="dp-desc">{cat.description}</p>
-              : <p className="notice">아직 등록된 특이사항이 없어요.</p>}
-
-            <div className="divider" />
-
-            <div className="section-title">밥 기록</div>
-            {cat.feedings.length > 0 ? (
-              <ul className="feed-log">
-                {cat.feedings.map((f) => (
-                  <li key={f.id}>
-                    <b>{KIND_KO[f.kind]}</b>
-                    {/* ★ 누가 줬는지 (§2.8-14). giver_id가 없으면 탈퇴로 CASCADE된 것 —
-                        일반 폴백('집사')과 구분해 보여준다. */}
-                    <span>
-                      {f.giver ?? (f.giver_id ? '집사' : COPY.deletedGiver)} · {agoKo(f.fed_at)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="notice">{COPY.noFeedRecord}</p>
-            )}
-            <p className="notice">{COPY.feedRecordCaveat}</p>
-
-            <div className="divider" />
-
-            <div className="section-title">목격 기록</div>
-            {sights.length > 0 ? (
-              <ul className="sight-log">
-                {sights.map((p) => (
-                  <li className="sight-item" key={p.id}>
-                    {/* §2.19 — 기록 시각(created_at)이 아니라 관측 시각(seen_at)을 보여준다 */}
-                    <div className="sight-time">{formatSeenAt(p.seen_at)}</div>
-                    <div className="sight-body">
-                      {p.photo_path && (
-                        <div className="sight-photo">
-                          <CatPhoto path={p.photo_path} kind="gallery" alt={cat.name} loggedIn />
-                        </div>
-                      )}
-                      {p.note && <SightNote text={p.note} />}
-                      <span className="sight-meta">
-                        {p.reporter ?? (p.reporter_id ? '집사' : COPY.deletedGiver)}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="notice">{COPY.noSightRecord}</p>
-            )}
-            {sightsMore && (
-              <button
-                type="button" className="sight-page-more"
-                onClick={loadMoreSights} disabled={sightsLoading}
-              >
-                {sightsLoading ? '불러오는 중…' : '더보기'}
-              </button>
-            )}
-          </div>
-
-          {/* alert() 를 대신한다 — 창을 띄우지 않고 버튼 바로 위에 붙는다 */}
-          {feedError && <p className="dp-feed-error" role="alert">{feedError}</p>}
-
-          <div className="bottom-bar">
-            <div>
-              <div className="bb-label">마지막으로 밥 먹은 시간</div>
-              <div className="bb-value">{agoKo(cat.last_fed_at) ?? '기록 없음'}</div>
-            </div>
-            <div className="bb-actions">
-              <button className="bb-btn bb-btn-line" onClick={openSightMap} disabled={sightOpening}>
-                {sightOpening ? '위치 확인 중…' : '여기서 봤어요'}
-              </button>
-              <button className="bb-btn" onClick={openPicker} disabled={saving}>
-                {saving ? '기록 중…' : '밥 주기'}
-              </button>
-            </div>
-          </div>
-
           {/* 과급식 되묻기 (§2.6). 네이티브 confirm() 자리 — Phase F */}
           {feedConfirm && (
             <ConfirmSheet
