@@ -357,10 +357,16 @@ body{
 .bb-btn-line:disabled{opacity:.5;cursor:default}
 .bb-btn-line:disabled:active{transform:none;background:transparent}
 
+/* 사진 미리보기가 붙으면 시트가 화면보다 길어진다. 예전엔 align-items:center 라 넘친 만큼
+   위아래로 똑같이 잘렸고, 스크롤 컨테이너도 아니어서 「확인」에 닿을 수 없었다.
+   스크림이 스크롤을 맡고, 세로 가운데 정렬은 시트의 margin:auto 가 한다 — 넘치면 auto 가 0 이 돼
+   시트가 위에서부터 시작한다. overscroll-behavior 는 끝에서 뒤의 .dp-scroll 로 번지지 않게. */
 .dp-sight-backdrop{position:absolute;inset:0;z-index:68;background:var(--token-scrim);
-  display:flex;align-items:center;justify-content:center;padding:20px;
+  display:flex;justify-content:center;padding:20px;
+  overflow-y:auto;overscroll-behavior:contain;
   animation:scrim-in .2s linear}
 .dp-sight-sheet{background:var(--token-paper);border-radius:var(--token-r-lg);padding:20px;
+  margin:auto 0;
   width:100%;max-width:340px;display:flex;flex-direction:column;gap:12px;
   box-shadow:var(--token-shadow-lg);font-family:var(--token-font-body);
   animation:pop-in .28s var(--token-ease-spring)}
