@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';        // ★ 추가
 import { Map, CustomOverlayMap, Circle, useKakaoLoader } from 'react-kakao-maps-sdk';
-import { Plus } from 'lucide-react';
+import { Plus, LocateFixed } from 'lucide-react';
 
 import { fetchCampus, fetchCatsForMap } from '../api/cats';
 import { useSession } from '../api/auth';
@@ -33,20 +33,40 @@ export default function MapPage() {
   const [registerCenter, setRegisterCenter] = useState(null);  // 등록 폼 미니 지도 초기 중심
   const [error, setError] = useState(null);
   const [userPos, setUserPos] = useState(null);   // ★ 내 위치 점(정적) 표시용
+  const [locating, setLocating] = useState(false);   // 내 위치 조회 중
+  const [locateMsg, setLocateMsg] = useState(null);  // 내 위치 실패 안내 (잠깐 떴다 사라짐)
 
   const mapRef = useRef(null);   // 지도 인스턴스 — 등록 시 현재 중심을 읽는다
 
-  // ★ 초기 지도 중심을 사용자 현재 위치로 — 마운트당 1회만 시도.
-  //   실패(권한 거부·타임아웃·미지원)해도 아무것도 하지 않는다 — 캠퍼스 중심이 그대로 폴백.
-  //   좌표는 setCenter 호출 + userPos 표시에만 쓰고 버린다 (DB·localStorage 저장 없음). 게스트도 동일하게 동작.
-useEffect(() => {
-  if (!navigator.geolocation) return;
-  navigator.geolocation.getCurrentPosition(
-    (pos) => setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude }), 
-    () => {},
-    { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
-  );
-}, []);
+  // §2.9 개정 (2026-10-14) — 초기 중심은 캠퍼스 고정. 진입 시 위치 권한을 묻지 않는다.
+  //   「내 위치」 버튼을 누를 때만 1회 조회한다. watchPosition(추적) 없음.
+  //   좌표는 panTo + userPos 점 표시에만 쓰고 버린다 (DB·localStorage 저장 없음).
+  function locateMe() {
+    if (locating) return;
+    if (!navigator.geolocation) { showLocateMsg(COPY.locateUnsupported); return; }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setUserPos(p);
+        mapRef.current?.panTo(new window.kakao.maps.LatLng(p.lat, p.lng));
+        setLocating(false);
+      },
+      (err) => {
+        setLocating(false);
+        showLocateMsg(err.code === err.PERMISSION_DENIED ? COPY.locateDenied : COPY.locateFailed);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 10000 }
+    );
+  }
+
+  const locateMsgTimer = useRef(null);
+  function showLocateMsg(msg) {
+    setLocateMsg(msg);
+    clearTimeout(locateMsgTimer.current);
+    locateMsgTimer.current = setTimeout(() => setLocateMsg(null), 3000);
+  }
+  useEffect(() => () => clearTimeout(locateMsgTimer.current), []);
 
   // 로그인 상태가 바뀌면 읽는 뷰가 달라지므로 다시 불러온다 (§2.2)
   useEffect(() => {
@@ -137,7 +157,7 @@ useEffect(() => {
       <div className="map-host">
         {!kakaoLoading && campus && (
           <Map
-            center={userPos ?? { lat: campus.center_lat, lng: campus.center_lng }}
+            center={{ lat: campus.center_lat, lng: campus.center_lng }}   // 캠퍼스 고정 (§2.9). 내 위치는 locateMe 의 panTo
             level={3}
             style={{ width: '100%', height: '100%' }}
             onCreate={(m) => { mapRef.current = m; }}
@@ -202,6 +222,17 @@ useEffect(() => {
           )}
         </div>
       </div>
+
+      {/* 내 위치 — + 버튼 바로 위. 카드가 뜨면 + 와 같이 내려간다 */}
+      <button
+        className={`fab-locate ${selectedId != null ? 'is-hidden' : ''}`}
+        onClick={locateMe}
+        disabled={locating}
+        aria-label="내 위치로 이동"
+      >
+        <LocateFixed size={22} strokeWidth={2.2} />
+      </button>
+      {locateMsg && <div className="locate-msg" role="status">{locateMsg}</div>}
 
       <button
         className={`fab-register ${selectedId != null ? 'is-hidden' : ''}`}

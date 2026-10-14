@@ -23,7 +23,7 @@ import waterIcon from '../assets/icon-water-fill.png';
 const KIND_ICON = { food: feedIcon, treat: treatIcon, water: waterIcon };
 
 // 브라우저 현재 위치를 1회 조회한다. 미지원·권한 거부·타임아웃이면 null을 resolve한다(throw 없음).
-// maximumAge 60000 — MapPage 마운트 때 받아둔 좌표가 캐시에 남아 있으면 즉시 반환된다.
+// maximumAge 60000 — 지도의 「내 위치」 버튼으로 받아둔 좌표가 캐시에 남아 있으면 즉시 반환된다.
 // 좌표는 지도 시작 중심에만 쓰고 버린다. 저장하지 않는다.
 function getMyPosOnce() {
   return new Promise((resolve) => {

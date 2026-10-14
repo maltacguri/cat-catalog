@@ -645,6 +645,29 @@ body{
 .fab-register:active{transform:scale(.9)}
 .fab-register.is-hidden{transform:translateY(110%) scale(.8);opacity:0;pointer-events:none}
 
+/* 내 위치 버튼 — + 바로 위, + 와 세로 중심선 맞춤 (56 − 44) / 2 = 6px 안쪽 */
+.fab-locate{
+  position:absolute;right:22px;bottom:calc(154px + env(safe-area-inset-bottom));
+  z-index:46;width:44px;height:44px;border-radius:var(--token-r-full);
+  background:var(--token-paper);color:var(--token-deep-green);
+  border:1px solid var(--token-line);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--token-shadow-md);cursor:pointer;
+  transition:transform .32s var(--token-ease-spring),opacity .2s;
+}
+.fab-locate:active{transform:scale(.9)}
+.fab-locate:disabled{opacity:.55;cursor:default}
+.fab-locate.is-hidden{transform:translateY(110%) scale(.8);opacity:0;pointer-events:none}
+
+/* 내 위치 실패 안내 — 버튼 왼쪽에 잠깐 */
+.locate-msg{
+  position:absolute;right:76px;left:16px;bottom:calc(154px + env(safe-area-inset-bottom));
+  z-index:46;padding:10px 14px;border-radius:var(--token-r-md);
+  background:var(--token-ink);color:var(--token-paper);
+  font-family:var(--token-font-body);font-size:13px;line-height:1.5;
+  box-shadow:var(--token-shadow-md);
+}
+
 /* ── 하단 바 (앱플로우 §6) ───────────────────────── */
 .bottombar{
   position:absolute; left:0; right:0; bottom:0; z-index:45;

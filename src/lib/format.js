@@ -113,6 +113,10 @@ export const COPY = {
   writeLocked: '로그인하면 기록할 수 있어요.',
   tabLocked: '로그인하면 더 많은 정보를 볼 수 있어요',
   deletedGiver: '탈퇴한 집사',
+  // §2.9 「내 위치」 버튼 실패 안내
+  locateDenied: '위치 권한이 꺼져 있어요. 브라우저 설정에서 허용해 주세요.',
+  locateFailed: '지금은 위치를 찾지 못했어요. 잠시 후 다시 눌러주세요.',
+  locateUnsupported: '이 브라우저에서는 위치를 쓸 수 없어요.',
   // §2.16 NoticePanel(「이용 안내」) 본문 — 소제목 + 문단 배열
   noticeSections: [
     {
