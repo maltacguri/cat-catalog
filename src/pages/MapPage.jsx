@@ -158,7 +158,7 @@ export default function MapPage() {
         {!kakaoLoading && campus && (
           <Map
             center={{ lat: campus.center_lat, lng: campus.center_lng }}   // 캠퍼스 고정 (§2.9). 내 위치는 locateMe 의 panTo
-            level={3}
+            level={5}   // 첫 화면에 부산대 고양이 전체가 들어오게 (2026-10-15). 3이면 400m 폭이라 몇 마리만 보였다
             style={{ width: '100%', height: '100%' }}
             onCreate={(m) => { mapRef.current = m; }}
             onClick={() => setSelectedId(null)}
